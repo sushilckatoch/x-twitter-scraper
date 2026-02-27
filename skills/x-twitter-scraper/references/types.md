@@ -93,11 +93,11 @@ interface TweetEventData {
 
 // Follower events (follower.gained, follower.lost)
 interface FollowerEventData {
-  userId: string;
-  username: string;
-  displayName: string;
-  followersCount: number;
-  verified: boolean;
+  followerId: string;
+  followerUsername: string;
+  followerName: string;
+  followerFollowersCount: number;
+  followerVerified: boolean;
 }
 
 type EventData = TweetEventData | FollowerEventData;

@@ -73,6 +73,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
 ```python
 import hmac
 import hashlib
+import os
 from flask import Flask, request
 
 app = Flask(__name__)

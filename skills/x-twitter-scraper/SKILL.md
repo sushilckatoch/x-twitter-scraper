@@ -68,7 +68,7 @@ All errors return `{ "error": "error_code" }`. Key error codes:
 
 | Status | Code | Action |
 |--------|------|--------|
-| 400 | `invalid_input`, `invalid_id`, `invalid_params`, `invalid_tweet_url`, `invalid_username`, `invalid_tool_type`, `missing_query`, `missing_params`, `webhook_inactive` | Fix the request, do not retry |
+| 400 | `invalid_input`, `invalid_id`, `invalid_params`, `invalid_tweet_url`, `invalid_tweet_id`, `invalid_username`, `invalid_tool_type`, `invalid_format`, `missing_query`, `missing_params`, `webhook_inactive` | Fix the request, do not retry |
 | 401 | `unauthenticated` | Check API key |
 | 402 | `no_subscription`, `subscription_inactive`, `usage_limit_reached` | Subscribe or wait for quota reset |
 | 403 | `monitor_limit_reached` | Delete a monitor or add capacity ($5/month) |
@@ -371,7 +371,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
   const event = JSON.parse(payload);
   // event.eventType: "tweet.new" | "tweet.reply" | "tweet.quote" | "tweet.retweet" | "follower.gained" | "follower.lost"
   // event.username: monitored account username
-  // event.data: tweet data ({ tweetId, text, metrics }) or follower data ({ userId, username })
+  // event.data: tweet data ({ tweetId, text, metrics }) or follower data ({ followerId, followerUsername, followerName, followerFollowersCount, followerVerified })
 
   // 4. Respond within 10 seconds (process async if slow)
   res.status(200).send("OK");
@@ -405,7 +405,7 @@ const monitor = await xquikFetch("/monitors", {
     eventTypes: ["tweet.new", "tweet.reply", "tweet.quote", "follower.gained"],
   }),
 });
-// Response: { id: "7", username: "elonmusk", xUserId: "44196397", eventTypes: [...], isActive: true }
+// Response: { id: "7", username: "elonmusk", xUserId: "44196397", eventTypes: [...], createdAt: "..." }
 
 // 2. Register webhook
 const webhook = await xquikFetch("/webhooks", {
