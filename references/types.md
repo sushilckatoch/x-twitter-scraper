@@ -2,6 +2,20 @@
 
 Copy-pasteable TypeScript types for all Xquik API objects.
 
+## Contents
+
+- [Account](#account)
+- [API Keys](#api-keys)
+- [Monitors](#monitors)
+- [Events](#events)
+- [Webhooks](#webhooks)
+- [Draws](#draws)
+- [Extractions](#extractions)
+- [X API](#x-api)
+- [Trends](#trends)
+- [Error](#error)
+- [Request Bodies](#request-bodies)
+
 ```typescript
 // ─── Account ─────────────────────────────────────────────
 
@@ -66,7 +80,8 @@ interface Event {
   xEventId?: string;
 }
 
-interface EventData {
+// Tweet events (tweet.new, tweet.reply, tweet.quote, tweet.retweet)
+interface TweetEventData {
   tweetId: string;
   text: string;
   metrics: {
@@ -75,6 +90,17 @@ interface EventData {
     replies: number;
   };
 }
+
+// Follower events (follower.gained, follower.lost)
+interface FollowerEventData {
+  userId: string;
+  username: string;
+  displayName: string;
+  followersCount: number;
+  verified: boolean;
+}
+
+type EventData = TweetEventData | FollowerEventData;
 
 interface EventList {
   events: Event[];

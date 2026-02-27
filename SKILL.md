@@ -1,6 +1,7 @@
 ---
 name: x-twitter-scraper
-description: Build integrations with the Xquik X (Twitter) real-time data platform REST API, webhooks, and MCP server. Use this skill when working with Xquik endpoints, building apps that monitor X accounts, extract Twitter/X data (followers, replies, retweets, communities, lists, Spaces), run giveaway draws, look up tweets/users, check follow relationships, or set up webhook delivery. Activate whenever the user mentions Xquik, xquik.com, X data extraction, Twitter scraping, tweet monitoring, giveaway draws on X, or connecting AI agents to X/Twitter data via MCP. Also use when the user needs help choosing the right Xquik endpoint, handling API errors, verifying webhook signatures, or setting up cursor pagination.
+description: Builds integrations with the Xquik X (Twitter) real-time data platform REST API, webhooks, and MCP server. Activates when working with Xquik endpoints, building apps that monitor X accounts, extracting Twitter/X data (followers, replies, retweets, communities, lists, Spaces), running giveaway draws, looking up tweets/users, checking follow relationships, or setting up webhook delivery. Triggers whenever the user mentions Xquik, xquik.com, X data extraction, Twitter scraping, tweet monitoring, giveaway draws on X, or connecting AI agents to X/Twitter data via MCP. Also activates when the user needs help choosing the right Xquik endpoint, handling API errors, verifying webhook signatures, or setting up cursor pagination.
+compatibility: Requires internet access to call the Xquik REST API (https://xquik.com/api/v1)
 license: MIT
 metadata:
   author: Xquik
@@ -34,13 +35,7 @@ const BASE = "https://xquik.com/api/v1";
 const headers = { "x-api-key": API_KEY, "Content-Type": "application/json" };
 ```
 
-```python
-import requests
-
-API_KEY = "xq_YOUR_KEY_HERE"
-BASE = "https://xquik.com/api/v1"
-HEADERS = {"x-api-key": API_KEY, "Content-Type": "application/json"}
-```
+For Python examples, see [references/python-examples.md](references/python-examples.md).
 
 ## Choosing the Right Endpoint
 
@@ -111,33 +106,6 @@ async function xquikFetch(path, options = {}) {
 }
 ```
 
-```python
-import time, random
-
-def xquik_fetch(path, method="GET", json_body=None, max_retries=3):
-    base_delay = 1.0
-
-    for attempt in range(max_retries + 1):
-        response = requests.request(
-            method,
-            f"{BASE}{path}",
-            headers=HEADERS,
-            json=json_body,
-        )
-
-        if response.ok:
-            return response.json()
-
-        retryable = response.status_code == 429 or response.status_code >= 500
-        if not retryable or attempt == max_retries:
-            error = response.json()
-            raise Exception(f"Xquik API {response.status_code}: {error['error']}")
-
-        retry_after = response.headers.get("Retry-After")
-        delay = int(retry_after) if retry_after else base_delay * (2 ** attempt) + random.uniform(0, 1)
-        time.sleep(delay)
-```
-
 ## Cursor Pagination
 
 Events, draws, extractions, and extraction results use cursor-based pagination. When more results exist, the response includes `hasMore: true` and a `nextCursor` string. Pass `nextCursor` as the `after` query parameter.
@@ -148,11 +116,10 @@ async function fetchAllPages(path, dataKey) {
   let cursor;
 
   while (true) {
-    const url = new URL(`${BASE}${path}`);
-    url.searchParams.set("limit", "100");
-    if (cursor) url.searchParams.set("after", cursor);
+    const params = new URLSearchParams({ limit: "100" });
+    if (cursor) params.set("after", cursor);
 
-    const data = await xquikFetch(`${path}?${url.searchParams}`);
+    const data = await xquikFetch(`${path}?${params}`);
     results.push(...data[dataKey]);
 
     if (!data.hasMore) break;
@@ -221,7 +188,13 @@ const job = await xquikFetch("/extractions", {
 });
 // Response: { id: "77777", toolType: "follower_explorer", status: "completed", totalResults: 195000 }
 
-// Step 3: Retrieve paginated results (up to 1,000 per page)
+// Step 3: Poll until complete (large jobs may return status "running")
+while (job.status === "pending" || job.status === "running") {
+  await new Promise((r) => setTimeout(r, 2000));
+  job = await xquikFetch(`/extractions/${job.id}`);
+}
+
+// Step 4: Retrieve paginated results (up to 1,000 per page)
 let cursor;
 const allResults = [];
 
@@ -235,45 +208,10 @@ while (true) {
   cursor = page.nextCursor;
 }
 
-// Step 4: Export as CSV/XLSX/Markdown (50,000 row limit)
+// Step 5: Export as CSV/XLSX/Markdown (50,000 row limit)
 const exportUrl = `${BASE}/extractions/${job.id}/export?format=csv&type=users`;
 const csvResponse = await fetch(exportUrl, { headers });
 const csvData = await csvResponse.text();
-```
-
-```python
-# Step 1: Estimate
-estimate = xquik_fetch("/extractions/estimate", method="POST", json_body={
-    "toolType": "reply_extractor",
-    "targetTweetId": "1893704267862470862",
-})
-
-if not estimate["allowed"]:
-    print(f"Would exceed quota: {estimate['projectedPercent']}%")
-    exit()
-
-# Step 2: Create job
-job = xquik_fetch("/extractions", method="POST", json_body={
-    "toolType": "reply_extractor",
-    "targetTweetId": "1893704267862470862",
-})
-
-# Step 3: Get results
-cursor = None
-results = []
-
-while True:
-    path = f"/extractions/{job['id']}"
-    if cursor:
-        path += f"?after={cursor}"
-    page = xquik_fetch(path)
-    results.extend(page["results"])
-
-    if not page["hasMore"]:
-        break
-    cursor = page["nextCursor"]
-
-print(f"Extracted {len(results)} results")
 ```
 
 ### Orchestrating Multiple Extractions
@@ -391,32 +329,11 @@ const details = await xquikFetch(`/draws/${draw.id}`);
 const exportUrl = `${BASE}/draws/${draw.id}/export?format=csv`;
 ```
 
-```python
-# Create draw with all filters
-draw = xquik_fetch("/draws", method="POST", json_body={
-    "tweetUrl": "https://x.com/burakbayir/status/1893456789012345678",
-    "winnerCount": 3,
-    "backupCount": 2,
-    "uniqueAuthorsOnly": True,
-    "mustRetweet": True,
-    "mustFollowUsername": "burakbayir",
-    "filterMinFollowers": 50,
-    "filterAccountAgeDays": 30,
-    "requiredKeywords": ["giveaway"],
-})
-
-# Get winners
-details = xquik_fetch(f"/draws/{draw['id']}")
-for winner in details["winners"]:
-    role = "BACKUP" if winner["isBackup"] else "WINNER"
-    print(f"{role} #{winner['position']}: @{winner['authorUsername']}")
-```
-
 ## Webhook Event Handling
 
 Webhooks deliver events to your HTTPS endpoint with HMAC-SHA256 signatures. Each delivery is a POST with `X-Xquik-Signature` header and JSON body containing `eventType`, `username`, and `data`.
 
-### Complete Webhook Handler with Event-Type Routing
+### Webhook Handler (Express)
 
 ```javascript
 import express from "express";
@@ -450,102 +367,18 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
 
   // 3. Parse and route by event type
   const event = JSON.parse(payload);
-
-  switch (event.eventType) {
-    case "tweet.new":
-      handleNewTweet(event.username, event.data);
-      break;
-    case "tweet.reply":
-      handleReply(event.username, event.data);
-      break;
-    case "tweet.quote":
-      handleQuote(event.username, event.data);
-      break;
-    case "tweet.retweet":
-      handleRetweet(event.username, event.data);
-      break;
-    case "follower.gained":
-      handleFollowerGained(event.username, event.data);
-      break;
-    case "follower.lost":
-      handleFollowerLost(event.username, event.data);
-      break;
-  }
+  // event.eventType: "tweet.new" | "tweet.reply" | "tweet.quote" | "tweet.retweet" | "follower.gained" | "follower.lost"
+  // event.username: monitored account username
+  // event.data: tweet data ({ tweetId, text, metrics }) or follower data ({ userId, username })
 
   // 4. Respond within 10 seconds (process async if slow)
   res.status(200).send("OK");
 });
 
-function handleNewTweet(username, data) {
-  // data: { tweetId, text, metrics: { likes, retweets, replies } }
-  console.log(`New tweet from @${username}: ${data.text}`);
-  // Apply business logic: forward to Slack, store in DB, trigger alerts...
-}
-
-function handleReply(username, data) {
-  console.log(`Reply from @${username}: ${data.text}`);
-}
-
-function handleQuote(username, data) {
-  console.log(`Quote tweet from @${username}: ${data.text}`);
-}
-
-function handleRetweet(username, data) {
-  console.log(`Retweet by @${username}`);
-}
-
-function handleFollowerGained(username, data) {
-  console.log(`@${username} gained a follower`);
-}
-
-function handleFollowerLost(username, data) {
-  console.log(`@${username} lost a follower`);
-}
-
 app.listen(3000);
 ```
 
-```python
-import hmac, hashlib, json, os
-from flask import Flask, request
-
-app = Flask(__name__)
-WEBHOOK_SECRET = os.environ["XQUIK_WEBHOOK_SECRET"]
-processed_hashes = set()  # Use Redis/DB in production
-
-def verify_signature(payload: bytes, signature: str, secret: str) -> bool:
-    expected = "sha256=" + hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(expected, signature)
-
-EVENT_HANDLERS = {
-    "tweet.new": lambda u, d: print(f"New tweet from @{u}: {d['text']}"),
-    "tweet.reply": lambda u, d: print(f"Reply from @{u}: {d['text']}"),
-    "tweet.quote": lambda u, d: print(f"Quote from @{u}: {d['text']}"),
-    "tweet.retweet": lambda u, d: print(f"Retweet by @{u}"),
-    "follower.gained": lambda u, d: print(f"@{u} gained a follower"),
-    "follower.lost": lambda u, d: print(f"@{u} lost a follower"),
-}
-
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    signature = request.headers.get("X-Xquik-Signature", "")
-    payload = request.get_data()
-
-    if not verify_signature(payload, signature, WEBHOOK_SECRET):
-        return "Invalid signature", 401
-
-    payload_hash = hashlib.sha256(payload).hexdigest()
-    if payload_hash in processed_hashes:
-        return "Already processed", 200
-    processed_hashes.add(payload_hash)
-
-    event = json.loads(payload)
-    handler = EVENT_HANDLERS.get(event["eventType"])
-    if handler:
-        handler(event["username"], event["data"])
-
-    return "OK", 200
-```
+For Flask (Python) webhook handler, see [references/python-examples.md](references/python-examples.md#webhook-handler-flask).
 
 Webhook security rules:
 - Always verify signature before processing (constant-time comparison)
@@ -621,6 +454,7 @@ For setup configs per platform, read `references/mcp-setup.md`.
 For additional detail beyond this guide:
 
 - **`references/api-endpoints.md`** -- All REST API endpoints with methods, paths, parameters, and response shapes
+- **`references/python-examples.md`** -- Python equivalents of all JavaScript examples (retry, extraction, draw, webhook)
 - **`references/webhooks.md`** -- Extended webhook examples, local testing with ngrok, delivery status monitoring
 - **`references/mcp-setup.md`** -- MCP server configuration for 8 IDEs and AI agent platforms
 - **`references/extractions.md`** -- Extraction tool details, export columns, common mistakes
