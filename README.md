@@ -1,10 +1,86 @@
 # Xquik Skill
 
-A [Claude Code skill](https://docs.anthropic.com/en/docs/claude-code/skills) for building integrations with the [Xquik](https://xquik.com) X (Twitter) real-time data platform.
+An [AI agent skill](https://skills.sh) for building integrations with the [Xquik](https://xquik.com) X (Twitter) real-time data platform.
+
+Works with **40+ AI coding agents** including Claude Code, OpenAI Codex, Cursor, GitHub Copilot, Gemini CLI, Windsurf, VS Code, Cline, Roo Code, Goose, Amp, Augment, Continue, OpenHands, Trae, OpenCode, and more.
+
+## Installation
+
+Install via the [skills CLI](https://skills.sh) (auto-detects your installed agents):
+
+```bash
+npx skills add Xquik-dev/x-twitter-scraper
+```
+
+### Manual Installation
+
+<details>
+<summary>Claude Code</summary>
+
+```bash
+git clone https://github.com/Xquik-dev/x-twitter-scraper.git .claude/skills/x-twitter-scraper
+```
+</details>
+
+<details>
+<summary>Codex / Cursor / Gemini CLI / GitHub Copilot</summary>
+
+```bash
+git clone https://github.com/Xquik-dev/x-twitter-scraper.git .agents/skills/x-twitter-scraper
+```
+</details>
+
+<details>
+<summary>Windsurf</summary>
+
+```bash
+git clone https://github.com/Xquik-dev/x-twitter-scraper.git .windsurf/skills/x-twitter-scraper
+```
+</details>
+
+<details>
+<summary>Cline</summary>
+
+```bash
+git clone https://github.com/Xquik-dev/x-twitter-scraper.git .agents/skills/x-twitter-scraper
+```
+</details>
+
+<details>
+<summary>Roo Code</summary>
+
+```bash
+git clone https://github.com/Xquik-dev/x-twitter-scraper.git .roo/skills/x-twitter-scraper
+```
+</details>
+
+<details>
+<summary>Continue</summary>
+
+```bash
+git clone https://github.com/Xquik-dev/x-twitter-scraper.git .continue/skills/x-twitter-scraper
+```
+</details>
+
+<details>
+<summary>Goose</summary>
+
+```bash
+git clone https://github.com/Xquik-dev/x-twitter-scraper.git .goose/skills/x-twitter-scraper
+```
+</details>
+
+<details>
+<summary>OpenCode</summary>
+
+```bash
+git clone https://github.com/Xquik-dev/x-twitter-scraper.git .agents/skills/x-twitter-scraper
+```
+</details>
 
 ## What This Skill Does
 
-When installed, this skill gives Claude deep knowledge of the Xquik platform, enabling it to:
+When installed, this skill gives your AI agent deep knowledge of the Xquik platform:
 
 - **Write API integrations** using the Xquik REST API (monitors, events, webhooks, draws, extractions, lookups, trends)
 - **Set up webhook handlers** with proper HMAC-SHA256 signature verification
@@ -13,31 +89,6 @@ When installed, this skill gives Claude deep knowledge of the Xquik platform, en
 - **Handle errors and pagination** following Xquik conventions
 - **Use all 19 extraction tools** with correct parameters
 - **Run giveaway draws** with configurable filters
-
-## Installation
-
-### Claude Code
-
-Add to your project's `.claude/skills/` directory:
-
-```bash
-cd your-project
-git clone https://github.com/Xquik-dev/x-twitter-scraper.git .claude/skills/x-twitter-scraper
-```
-
-Or add as a git submodule:
-
-```bash
-git submodule add https://github.com/Xquik-dev/x-twitter-scraper.git .claude/skills/x-twitter-scraper
-```
-
-### Global Installation
-
-To make the skill available across all projects:
-
-```bash
-git clone https://github.com/Xquik-dev/x-twitter-scraper.git ~/.claude/skills/x-twitter-scraper
-```
 
 ## Skill Structure
 
