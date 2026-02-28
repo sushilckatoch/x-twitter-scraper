@@ -8,6 +8,10 @@ Connect AI agents and IDEs to Xquik via the Model Context Protocol. The MCP serv
 | Endpoint | `https://xquik.com/mcp` |
 | Auth header | `x-api-key` |
 
+## Claude.ai (Web)
+
+Claude.ai supports MCP connectors natively via OAuth. Add Xquik as a connector from **Settings > Feature Preview > Integrations > Add More > Xquik**. The OAuth 2.1 flow handles authentication automatically -- no API key needed.
+
 ## Claude Desktop
 
 Claude Desktop only supports stdio transport. Use `mcp-remote` as a bridge (requires [Node.js](https://nodejs.org)).
@@ -50,16 +54,31 @@ Add to `.mcp.json`:
 
 ## ChatGPT
 
-ChatGPT Desktop does not support custom HTTP headers. Use the [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/mcp/):
+3 ways to connect ChatGPT to Xquik:
+
+### Option 1: Custom GPT (Recommended)
+
+Create a Custom GPT and add Xquik as an Action using the OpenAPI schema at `https://docs.xquik.com/openapi.json`. Set the API key under Authentication > API Key > Header `x-api-key`.
+
+### Option 2: Agents SDK
+
+Use the [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/mcp/) for programmatic access:
 
 ```python
 from agents.mcp import MCPServerStreamableHttp
 
-xquik = MCPServerStreamableHttp(
+async with MCPServerStreamableHttp(
     url="https://xquik.com/mcp",
     headers={"x-api-key": "xq_YOUR_KEY_HERE"},
-)
+    params={},
+) as xquik:
+    # use xquik as a tool provider
+    pass
 ```
+
+### Option 3: Developer Mode
+
+ChatGPT Developer Mode supports MCP connectors via OAuth. Add Xquik from **Settings > Developer Mode > MCP Tools > Add**. Enter `https://xquik.com/mcp` as the endpoint. OAuth handles authentication automatically.
 
 ## Codex CLI
 

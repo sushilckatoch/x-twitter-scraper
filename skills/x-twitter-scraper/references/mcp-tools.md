@@ -174,6 +174,7 @@ Supports X search syntax: keywords, `#hashtags`, `from:user`, `to:user`, `"exact
 | `tweets[].authorUsername` | string | X username of the tweet author |
 | `tweets[].authorName` | string | Display name of the tweet author |
 | `tweets[].createdAt` | string | ISO 8601 timestamp when tweet was posted |
+| `tweets[].media[]` | array | Optional. Attached photos/videos: `mediaUrl`, `type`, `url` |
 
 **Annotations:** readOnly, idempotent, openWorld | **Cost:** Metered
 
@@ -201,6 +202,7 @@ Get full details of a specific tweet by its ID or URL. Returns engagement metric
 | `tweet.quoteCount` | number | Number of quote tweets |
 | `tweet.viewCount` | number | Number of views |
 | `tweet.bookmarkCount` | number | Number of bookmarks |
+| `tweet.media[]` | array | Optional. Attached photos/videos: `mediaUrl`, `type`, `url` |
 | `author.id` | string | Author user ID |
 | `author.username` | string | Author username |
 | `author.followers` | number | Author follower count |

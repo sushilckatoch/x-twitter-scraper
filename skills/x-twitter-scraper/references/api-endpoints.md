@@ -109,7 +109,6 @@ POST /monitors
   "username": "elonmusk",
   "xUserId": "44196397",
   "eventTypes": ["tweet.new", "tweet.reply", "tweet.quote"],
-  "isActive": true,
   "createdAt": "2026-02-24T10:30:00.000Z"
 }
 ```
@@ -433,7 +432,7 @@ Metered operations that count toward the monthly quota.
 GET /x/tweets/{id}
 ```
 
-Returns full tweet with engagement metrics (likes, retweets, replies, quotes, views, bookmarks) and author info (username, followers, verified status).
+Returns full tweet with engagement metrics (likes, retweets, replies, quotes, views, bookmarks), author info (username, followers, verified status, profile picture), and optional attached media (photos/videos with URLs).
 
 ### Search Tweets
 
@@ -443,7 +442,7 @@ GET /x/tweets/search?q={query}
 
 Search using X syntax: keywords, `#hashtags`, `from:user`, `to:user`, `"exact phrases"`, `OR`, `-exclude`.
 
-Returns tweet info with optional engagement metrics (likeCount, retweetCount, replyCount). Some fields may be omitted if unavailable.
+Returns tweet info with optional engagement metrics (likeCount, retweetCount, replyCount) and optional attached media. Some fields may be omitted if unavailable.
 
 ### Get User
 

@@ -242,6 +242,8 @@ interface ExtractionJob {
   targetUsername?: string;
   targetUserId?: string;
   targetCommunityId?: string;
+  targetListId?: string;
+  targetSpaceId?: string;
   searchQuery?: string;
   aiTitles?: { en: string; tr: string; es: string };
   errorMessage?: string;
@@ -290,16 +292,23 @@ interface CreateExtractionRequest {
 
 // ─── X API ───────────────────────────────────────────────
 
+interface TweetMediaItem {
+  mediaUrl: string;
+  type: string;       // "photo" | "video" | "animated_gif"
+  url: string;
+}
+
 interface Tweet {
   id: string;
   text: string;
-  createdAt: string;
+  createdAt?: string;
   retweetCount: number;
   replyCount: number;
   likeCount: number;
   quoteCount: number;
   viewCount: number;
   bookmarkCount: number;
+  media?: TweetMediaItem[];
 }
 
 interface TweetAuthor {
@@ -307,7 +316,7 @@ interface TweetAuthor {
   username: string;
   followers: number;
   verified: boolean;
-  profilePicture: string;
+  profilePicture?: string;
 }
 
 interface TweetSearchResult {
@@ -317,6 +326,7 @@ interface TweetSearchResult {
   likeCount: number;    // Omitted if unavailable
   retweetCount: number; // Omitted if unavailable
   replyCount: number;   // Omitted if unavailable
+  media?: TweetMediaItem[];
   author: {
     id: string;
     username: string;
@@ -439,6 +449,7 @@ interface McpSearchResult {
     authorUsername: string;   // X username of the tweet author
     authorName: string;       // Display name of the tweet author
     createdAt: string;        // ISO 8601 timestamp when tweet was posted
+    media?: { mediaUrl: string; type: string; url: string }[];  // Attached photos/videos
     // No engagement metrics -- use lookup-tweet for those
   }[];
 }
@@ -455,6 +466,7 @@ interface McpTweetLookup {
     quoteCount: number;       // Number of quote tweets
     viewCount: number;        // Number of views
     bookmarkCount: number;    // Number of bookmarks
+    media?: { mediaUrl: string; type: string; url: string }[];  // Attached photos/videos
   };
   author?: {                  // Tweet author details
     id: string;               // Author user ID
