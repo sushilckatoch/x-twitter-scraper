@@ -475,6 +475,6 @@ For additional detail beyond this guide:
 - **`references/api-endpoints.md`**: All REST API endpoints with methods, paths, parameters, and response shapes
 - **`references/python-examples.md`**: Python equivalents of all JavaScript examples (retry, extraction, draw, webhook)
 - **`references/webhooks.md`**: Extended webhook examples, local testing with ngrok, delivery status monitoring
-- **`references/mcp-setup.md`**: MCP server configuration for 8 IDEs and AI agent platforms
+- **`references/mcp-setup.md`**: MCP server configuration for 9 IDEs and AI agent platforms
 - **`references/extractions.md`**: Extraction tool details, export columns
 - **`references/types.md`**: TypeScript type definitions for all REST API and MCP output objects
