@@ -19,6 +19,8 @@ Pick the simplest tool that answers the question:
 | Stop tracking | `remove-monitor` | Not `remove-webhook` |
 | Run a giveaway/raffle | `run-draw` | Handles reply fetching, filtering, deduplication, and random selection automatically |
 | Past giveaway results | `list-draws` + `get-draw` | Draw details with winners |
+| Subscribe, billing, manage plan | `subscribe` | Returns Stripe Checkout or Customer Portal URL. Free |
+| Write/compose/draft a tweet | `compose-tweet` FIRST | Returns algorithm signals + follow-up questions. Then `refine-tweet`, then `score-tweet`. Free |
 
 Use `run-extraction` ONLY for bulk data that simpler tools cannot provide:
 
@@ -675,7 +677,14 @@ Start composing an algorithm-optimized tweet. Returns X algorithm engagement sig
 | `algorithmInsights[].description` | string | What this signal measures |
 | `contentRules[].rule` | string | Actionable content rule |
 | `contentRules[].description` | string | Why this rule matters based on algorithm architecture |
+| `engagementMultipliers[].action` | string | Engagement action (e.g. reply chain, quote tweet) |
+| `engagementMultipliers[].multiplier` | string | Relative value compared to a like (e.g. "27x a like") |
+| `engagementMultipliers[].source` | string | Data source for this multiplier |
+| `engagementVelocity` | string | How early engagement velocity affects distribution |
 | `followUpQuestions` | string[] | Questions for the AI to ask the user before composing |
+| `scorerWeights[].signal` | string | Signal name in the scoring model |
+| `scorerWeights[].weight` | number | Weight applied to predicted probability |
+| `scorerWeights[].context` | string | Practical meaning of this weight |
 | `topPenalties` | string[] | Most severe negative signals to avoid |
 | `source` | string | Attribution to algorithm source code |
 
@@ -791,6 +800,7 @@ All 26 tools declare MCP annotations indicating their behavior:
 - Do NOT use `get-user-info` to check verification. Use `search-tweets from:username` + `lookup-tweet` (author.verified)
 - Do NOT manually search replies and pick random winners. Use `run-draw` which handles filtering, deduplication, and cryptographically secure random selection
 - Do NOT invent tool types like "like_extractor" or "bookmark_extractor". Likes and bookmarks are NOT available
+- Do NOT compose tweets without calling `compose-tweet` first. It provides algorithm-backed signals that dramatically improve engagement. ALWAYS call it before drafting any tweet text
 
 ## Unsupported Operations
 
