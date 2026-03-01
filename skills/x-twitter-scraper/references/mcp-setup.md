@@ -10,7 +10,7 @@ Connect AI agents and IDEs to Xquik via the Model Context Protocol. The MCP serv
 
 ## Claude.ai (Web)
 
-Claude.ai supports MCP connectors natively via OAuth. Add Xquik as a connector from **Settings > Feature Preview > Integrations > Add More > Xquik**. The OAuth 2.1 flow handles authentication automatically -- no API key needed.
+Claude.ai supports MCP connectors natively via OAuth. Add Xquik as a connector from **Settings > Feature Preview > Integrations > Add More > Xquik**. The OAuth 2.1 flow handles authentication automatically. No API key needed.
 
 ## Claude Desktop
 

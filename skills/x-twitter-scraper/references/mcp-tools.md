@@ -31,8 +31,8 @@ Pick the simplest tool that answers the question:
 
 Use `run-extraction` ONLY for bulk data that simpler tools cannot provide:
 
-- All followers/following of an account (not just the count -- use `get-user-info` for counts)
-- All replies/retweets/quotes of a tweet (comprehensive list -- use `lookup-tweet` for just the counts)
+- All followers/following of an account (not just the count; use `get-user-info` for counts)
+- All replies/retweets/quotes of a tweet (comprehensive list; use `lookup-tweet` for just the counts)
 - Full tweet thread, article extraction, community/list/space members
 - People search, mention history, all posts from a user
 - Always call `estimate-extraction` first to check cost. Requires active subscription.
@@ -121,7 +121,7 @@ Stop monitoring an X account and delete the monitor. Permanent. To only stop pus
 
 ### get-events
 
-Retrieve recent activity from monitored X accounts. Only returns events from accounts YOU monitor via `add-monitor`. Does NOT search all of X -- use `search-tweets` for that.
+Retrieve recent activity from monitored X accounts. Only returns events from accounts YOU monitor via `add-monitor`. Does NOT search all of X. Use `search-tweets` for that.
 
 **Input:**
 
@@ -278,7 +278,7 @@ Check if one X account follows another. Returns both directions.
 
 ### get-trends
 
-Get trending topics on X for a region. Free -- does not consume usage quota.
+Get trending topics on X for a region. Subscription required, does not consume usage quota.
 
 **Input:**
 

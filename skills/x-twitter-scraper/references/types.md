@@ -521,7 +521,7 @@ interface McpSearchResult {
     authorName: string;       // Display name of the tweet author
     createdAt: string;        // ISO 8601 timestamp when tweet was posted
     media?: { mediaUrl: string; type: string; url: string }[];  // Attached photos/videos
-    // No engagement metrics -- use lookup-tweet for those
+    // No engagement metrics. Use lookup-tweet for those
   }[];
 }
 
