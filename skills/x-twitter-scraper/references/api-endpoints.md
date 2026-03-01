@@ -123,7 +123,7 @@ Returns `409 monitor_already_exists` if the username is already monitored.
 GET /monitors
 ```
 
-Returns all monitors (up to 200, no pagination).
+Returns all monitors (up to 200, no pagination). Response includes `monitors` array and `total` count.
 
 ### Get Monitor
 
@@ -450,7 +450,7 @@ Returns tweet info with optional engagement metrics (likeCount, retweetCount, re
 GET /x/users/{username}
 ```
 
-Returns profile info: name, username, bio, follower count, following count, profile picture, location, created date, statuses count.
+Returns profile info. Fields `id`, `username`, `name` are always present. All other fields (`description`, `followers`, `following`, `verified`, `profilePicture`, `location`, `createdAt`, `statusesCount`) are optional and omitted when unavailable.
 
 ### Check Follower
 
@@ -506,10 +506,16 @@ Free, no usage consumed. Cached, refreshes every 15 minutes.
 | 402 | `subscription_inactive` | Subscription is not active |
 | 402 | `usage_limit_reached` | Monthly usage cap exceeded |
 | 403 | `monitor_limit_reached` | Plan monitor limit exceeded |
-| 404 | `not_found` | Resource does not exist |
 | 400 | `webhook_inactive` | Webhook is disabled (test-webhook only) |
+| 400 | `api_key_limit_reached` | API key limit reached (100 max) |
+| 402 | `no_addon` | No monitor addon on subscription |
+| 404 | `not_found` | Resource does not exist |
+| 404 | `user_not_found` | X user not found |
+| 404 | `tweet_not_found` | Tweet not found |
 | 409 | `monitor_already_exists` | Duplicate monitor for same username |
 | 429 | - | Rate limited. Retry with backoff |
+| 429 | `x_api_rate_limited` | X data source rate limited. Retry |
 | 500 | `internal_error` | Server error |
 | 502 | `stream_registration_failed` | Stream registration failed. Retry |
-| 502 | `x_api_unavailable` | X API temporarily unavailable |
+| 502 | `x_api_unavailable` | X data source temporarily unavailable |
+| 502 | `x_api_unauthorized` | X data source authentication failed. Retry |

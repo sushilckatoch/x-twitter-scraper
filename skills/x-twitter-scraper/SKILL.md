@@ -63,15 +63,15 @@ All errors return `{ "error": "error_code" }`. Key error codes:
 
 | Status | Code | Action |
 |--------|------|--------|
-| 400 | `invalid_input`, `invalid_id`, `invalid_params`, `invalid_tweet_url`, `invalid_tweet_id`, `invalid_username`, `invalid_tool_type`, `invalid_format`, `missing_query`, `missing_params`, `webhook_inactive` | Fix the request, do not retry |
+| 400 | `invalid_input`, `invalid_id`, `invalid_params`, `invalid_tweet_url`, `invalid_tweet_id`, `invalid_username`, `invalid_tool_type`, `invalid_format`, `missing_query`, `missing_params`, `webhook_inactive`, `api_key_limit_reached` | Fix the request, do not retry |
 | 401 | `unauthenticated` | Check API key |
-| 402 | `no_subscription`, `subscription_inactive`, `usage_limit_reached` | Subscribe or wait for quota reset |
+| 402 | `no_subscription`, `subscription_inactive`, `usage_limit_reached`, `no_addon` | Subscribe or wait for quota reset |
 | 403 | `monitor_limit_reached` | Delete a monitor or add capacity ($5/month) |
-| 404 | `not_found` | Resource doesn't exist or belongs to another account |
+| 404 | `not_found`, `user_not_found`, `tweet_not_found` | Resource doesn't exist or belongs to another account |
 | 409 | `monitor_already_exists` | Monitor exists, use the existing one |
-| 429 | - | Rate limited. Retry with exponential backoff, respect `Retry-After` header |
+| 429 | `x_api_rate_limited` | Rate limited. Retry with exponential backoff, respect `Retry-After` header |
 | 500 | `internal_error` | Retry with backoff |
-| 502 | `stream_registration_failed`, `x_api_unavailable` | Retry with backoff |
+| 502 | `stream_registration_failed`, `x_api_unavailable`, `x_api_unauthorized` | Retry with backoff |
 
 Retry only `429` and `5xx`. Never retry `4xx` (except 429). Max 3 retries with exponential backoff:
 
