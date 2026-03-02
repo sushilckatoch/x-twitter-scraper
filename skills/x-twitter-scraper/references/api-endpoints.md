@@ -14,6 +14,7 @@ All requests require the `x-api-key` header. All responses are JSON. HTTPS only.
 - [Draws](#draws)
 - [Extractions](#extractions)
 - [X API (Direct Lookups)](#x-api-direct-lookups)
+- [X Media (Download)](#x-media-download)
 - [Trends](#trends)
 
 ---
@@ -357,23 +358,25 @@ Formats: `csv`, `xlsx`, `md`. Types: `winners` (default), `entries`. Entry expor
 POST /extractions
 ```
 
-Run a bulk data extraction job. See `references/extractions.md` for all 19 tool types.
+Run a bulk data extraction job. See `references/extractions.md` for all 20 tool types.
 
 **Body:**
 ```json
 {
   "toolType": "reply_extractor",
-  "targetTweetId": "1893704267862470862"
+  "targetTweetId": "1893704267862470862",
+  "resultsLimit": 500
 }
 ```
+
+`resultsLimit` (optional): Maximum results to extract. Stops early instead of fetching all data. Useful for controlling costs.
 
 **Response:**
 ```json
 {
-  "id": "77777",
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "toolType": "reply_extractor",
-  "status": "completed",
-  "totalResults": 150
+  "status": "running"
 }
 ```
 
@@ -459,6 +462,52 @@ GET /x/followers/check?source={username}&target={username}
 ```
 
 Returns `isFollowing` and `isFollowedBy` for both directions.
+
+---
+
+## X Media (Download)
+
+### Download Media
+
+```
+POST /x/media/download
+```
+
+Download images, videos, and GIFs from a tweet. Returns permanent download URLs hosted on `media.xquik.com`.
+
+**Body:** Provide either `tweetId` or `tweetUrl` (at least 1 required).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `tweetId` | string | Numeric tweet ID |
+| `tweetUrl` | string | Full tweet URL (x.com or twitter.com) |
+
+**Response:**
+```json
+{
+  "tweetId": "1893456789012345678",
+  "media": [
+    {
+      "url": "https://media.xquik.com/dl/abc123/video.mp4",
+      "type": "video",
+      "index": 0,
+      "fileSize": "4821000"
+    },
+    {
+      "url": "https://media.xquik.com/dl/def456/photo.jpg",
+      "type": "photo",
+      "index": 1,
+      "fileSize": "245000"
+    }
+  ]
+}
+```
+
+Each media item: `url` (permanent hosted URL), `type` (`photo`, `video`, or `animated_gif`), `index` (0-based position), `fileSize` (bytes as string, omitted if unavailable).
+
+First download is metered (counts toward monthly quota). Subsequent requests for the same tweet return cached URLs at no cost. Downloads are saved to the gallery at `https://xquik.com/gallery`.
+
+Returns `400 no_media` if the tweet has no downloadable media.
 
 ---
 
@@ -752,6 +801,7 @@ Link your X username to your Xquik account. Required for own-account detection i
 | 400 | `invalid_params` | Export query parameters are missing or invalid |
 | 400 | `missing_query` | Required query parameter is missing |
 | 400 | `missing_params` | Required query parameters are missing |
+| 400 | `no_media` | Tweet has no downloadable media |
 | 401 | `unauthenticated` | Missing or invalid API key |
 | 402 | `no_subscription` | No active subscription |
 | 402 | `subscription_inactive` | Subscription is not active |

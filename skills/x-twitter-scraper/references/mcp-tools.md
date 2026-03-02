@@ -1,6 +1,6 @@
 # Xquik MCP Tools Reference
 
-Complete reference for all 37 MCP tools exposed by the Xquik server at `https://xquik.com/mcp`.
+Complete reference for all 38 MCP tools exposed by the Xquik server at `https://xquik.com/mcp`.
 
 ## Tool Selection Rules
 
@@ -11,6 +11,7 @@ Pick the simplest tool that answers the question:
 | Single tweet by ID or URL | `lookup-tweet` | Full metrics: likes, retweets, replies, quotes, views, bookmarks, author verification |
 | Search tweets by keyword/hashtag/from:user | `search-tweets` | Basic tweet info: id, text, author, date (no engagement metrics) |
 | User profile, bio, follower/following counts | `get-user-info` | Name, username, bio, follower count, following count, profile picture (no verification, tweet count, or join date) |
+| Download images/videos/GIFs from a tweet | `download-media` | Permanent hosted URLs on media.xquik.com. First download metered, cached free |
 | Check follow relationship | `check-follow` | Both directions: following and followedBy |
 | Trending topics by region | `get-trends` | Names, ranks, search queries. Free, no usage consumed |
 | Activity from monitored accounts | `get-events` | Only YOUR monitors, not all of X |
@@ -52,6 +53,7 @@ Multi-step tool sequences for common tasks:
 | **Analyze tweet style** | `analyze-style` (fetch & cache tweets) -> `get-style` (reference) -> `compose-tweet` with `styleUsername` |
 | **Compare styles** | `analyze-style` for both accounts -> `compare-styles` |
 | **Track performance** | `analyze-style` (cache tweets) -> `analyze-performance` (live metrics) |
+| **Download & share media** | `download-media` (returns permanent hosted URLs, share directly) |
 | **Save & manage drafts** | `compose-tweet` -> `refine-tweet` -> `score-tweet` -> `save-draft` -> `list-drafts` |
 | **Subscribe or manage billing** | `subscribe` (returns Stripe URL) |
 
@@ -60,7 +62,7 @@ Multi-step tool sequences for common tasks:
 | Category | Tools |
 |----------|-------|
 | **Free** | `list-monitors`, `add-monitor`, `remove-monitor`, `get-events`, `get-event`, `list-webhooks`, `add-webhook`, `remove-webhook`, `test-webhook`, `list-extractions`, `get-extraction`, `estimate-extraction`, `list-draws`, `get-draw`, `get-account`, `subscribe`, `get-trends`, `compose-tweet`, `refine-tweet`, `score-tweet`, `get-style`, `list-styles`, `delete-style`, `compare-styles`, `set-x-identity`, `save-draft`, `list-drafts`, `get-draft`, `delete-draft` |
-| **Metered** (counts toward monthly quota) | `search-tweets`, `get-user-info`, `lookup-tweet`, `check-follow`, `run-extraction`, `run-draw`, `analyze-style`, `analyze-performance` |
+| **Metered** (counts toward monthly quota) | `search-tweets`, `get-user-info`, `lookup-tweet`, `download-media` (first download only, cached free), `check-follow`, `run-extraction`, `run-draw`, `analyze-style`, `analyze-performance` |
 
 ---
 
@@ -254,6 +256,33 @@ Look up an X user profile by username. Does NOT return verification status or tw
 
 ---
 
+### download-media
+
+Download images, videos, and GIFs from a tweet. Returns permanent download URLs hosted on media.xquik.com.
+
+**Input:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `tweetId` | string | Yes | Tweet ID or full tweet URL (x.com or twitter.com) |
+
+**Output:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `tweetId` | string | Resolved tweet ID |
+| `media` | array | Array of downloaded media items |
+| `media[].url` | string | Permanent download URL hosted on media.xquik.com |
+| `media[].type` | string | Media type: `photo`, `video`, or `animated_gif` |
+| `media[].index` | number | Position in the tweet's media attachments (0-indexed) |
+| `media[].fileSize` | string | File size in bytes (as a string). Omitted if unavailable |
+
+**Quota:** First download is metered (counts toward your monthly quota). Subsequent requests for the same tweet return cached URLs at no cost. Downloads are saved to the user's gallery at `https://xquik.com/gallery`.
+
+**Annotations:** openWorld | **Cost:** Metered (first download only, cached free)
+
+---
+
 ### check-follow
 
 Check if one X account follows another. Returns both directions.
@@ -398,13 +427,14 @@ Preview the cost of an extraction before running it. Always call this before `ru
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `toolType` | string | Yes | One of 19 extraction tool types (see `run-extraction`) |
+| `toolType` | string | Yes | One of 20 extraction tool types (see `run-extraction`) |
 | `targetUsername` | string | Conditional | Required for: follower_explorer, following_explorer, verified_follower_explorer, mention_extractor, post_extractor |
 | `targetTweetId` | string | Conditional | Required for: reply_extractor, repost_extractor, quote_extractor, thread_extractor, article_extractor |
 | `targetCommunityId` | string | Conditional | Required for: community_extractor, community_moderator_explorer, community_post_extractor, community_search |
 | `targetListId` | string | Conditional | Required for: list_member_extractor, list_post_extractor, list_follower_explorer |
 | `targetSpaceId` | string | Conditional | Required for: space_explorer |
-| `searchQuery` | string | Conditional | Required for: people_search, community_search |
+| `searchQuery` | string | Conditional | Required for: people_search, community_search, tweet_search_extractor |
+| `resultsLimit` | number | No | Maximum results to estimate for. Omit for all available results |
 
 **Output:**
 
@@ -435,9 +465,10 @@ Run a bulk data extraction job. Subscription required. For simpler lookups, pref
 | `targetCommunityId` | string | Conditional | Community ID |
 | `targetListId` | string | Conditional | List ID |
 | `targetSpaceId` | string | Conditional | Space ID |
-| `searchQuery` | string | Conditional | Search keywords |
+| `searchQuery` | string | Conditional | Search keywords (for `people_search`, `community_search`, `tweet_search_extractor`) |
+| `resultsLimit` | number | No | Maximum results to extract. Stops early instead of fetching all. Omit for all results |
 
-**19 tool types by target:**
+**20 tool types by target:**
 
 | Target | Tool Types |
 |--------|-----------|
@@ -446,7 +477,7 @@ Run a bulk data extraction job. Subscription required. For simpler lookups, pref
 | Community ID | `community_extractor`, `community_moderator_explorer`, `community_post_extractor`, `community_search` |
 | List ID | `list_member_extractor`, `list_post_extractor`, `list_follower_explorer` |
 | Space ID | `space_explorer` |
-| Search query | `people_search` |
+| Search query | `people_search`, `tweet_search_extractor` |
 
 **Output:**
 
@@ -1020,7 +1051,7 @@ Both interfaces access the same Xquik platform. Choose based on your integration
 | **Transport** | StreamableHTTP | HTTPS + JSON |
 | **Auth** | `x-api-key` header | `x-api-key` header |
 | **Best for** | AI agents, IDE integrations | Custom apps, scripts, backend services |
-| **Tools/Endpoints** | 37 tools | 37+ endpoints |
+| **Tools/Endpoints** | 38 tools | 38+ endpoints |
 | **User profile** | Subset: name, bio, follower/following counts, profile picture | Full: adds verified, location, createdAt, statusesCount |
 | **Follow check** | `following` / `followedBy` | `isFollowing` / `isFollowedBy` |
 | **Monitor username field** | `xUsername` | `username` |
@@ -1040,14 +1071,14 @@ Both interfaces access the same Xquik platform. Choose based on your integration
 
 ## Annotation Summary
 
-All 37 tools declare MCP annotations indicating their behavior:
+All 38 tools declare MCP annotations indicating their behavior:
 
 | Annotation | Meaning | Tools |
 |------------|---------|-------|
 | `readOnlyHint: true` | Does not modify any data | list-monitors, get-events, get-event, search-tweets, get-user-info, list-webhooks, lookup-tweet, check-follow, list-extractions, get-extraction, estimate-extraction, list-draws, get-draw, get-account, get-trends, compose-tweet, refine-tweet, score-tweet, get-style, list-styles, compare-styles, analyze-performance, list-drafts, get-draft |
 | `destructiveHint: true` | Permanently deletes data | remove-monitor, remove-webhook, delete-style, delete-draft |
 | `idempotentHint: true` | Safe to retry, same result | list-monitors, remove-monitor, get-events, get-event, search-tweets, get-user-info, list-webhooks, remove-webhook, lookup-tweet, check-follow, list-extractions, get-extraction, estimate-extraction, list-draws, get-draw, get-account, subscribe, get-trends, compose-tweet, refine-tweet, score-tweet, set-x-identity, get-style, list-styles, delete-style, compare-styles, analyze-performance, list-drafts, get-draft, delete-draft |
-| `openWorldHint: true` | Makes external network requests | add-monitor, search-tweets, get-user-info, add-webhook, test-webhook, lookup-tweet, check-follow, run-extraction, estimate-extraction, run-draw, subscribe, get-trends, analyze-style, analyze-performance |
+| `openWorldHint: true` | Makes external network requests | add-monitor, search-tweets, get-user-info, add-webhook, test-webhook, lookup-tweet, download-media, check-follow, run-extraction, estimate-extraction, run-draw, subscribe, get-trends, analyze-style, analyze-performance |
 
 ---
 
@@ -1063,10 +1094,13 @@ All 37 tools declare MCP annotations indicating their behavior:
 - Do NOT use `get-user-info` to check verification. Use `search-tweets from:username` + `lookup-tweet` (author.verified)
 - Do NOT manually search replies and pick random winners. Use `run-draw` which handles filtering, deduplication, and cryptographically secure random selection
 - Do NOT invent tool types like "like_extractor" or "bookmark_extractor". Likes and bookmarks are NOT available
+- Do NOT use `lookup-tweet` to download media. Use `download-media` which downloads and hosts the files permanently
 - Do NOT compose tweets without calling `compose-tweet` first. It provides algorithm-backed signals that dramatically improve engagement. ALWAYS call it before drafting any tweet text
 - Do NOT call `analyze-style` without checking `get-style` first. The cached style may already exist
 - Do NOT call `analyze-performance` without first caching tweets via `analyze-style`
 - Do NOT forget to call `set-x-identity` before style analysis if you want own-account detection
+- Do NOT loop `search-tweets` for bulk results. It returns ~20 tweets with no pagination. Use `run-extraction` with `tweet_search_extractor` for bulk keyword search (up to 1,000)
+- Do NOT run extractions without `resultsLimit` when the user specifies a count. "100 tweets" means `resultsLimit: 100`. Omitting it extracts ALL data and wastes credits
 
 ## Unsupported Operations
 

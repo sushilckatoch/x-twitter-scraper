@@ -1,6 +1,6 @@
 # Xquik Extraction Tools
 
-19 bulk data extraction tools. Each requires a specific target parameter.
+20 bulk data extraction tools. Each requires a specific target parameter.
 
 **Endpoint:** `POST /extractions`
 
@@ -98,14 +98,26 @@ The `@` prefix is automatically stripped if included.
 | Tool Type | Description |
 |-----------|-------------|
 | `people_search` | Search for users by keyword |
+| `tweet_search_extractor` | Search and extract tweets by keyword or hashtag (bulk, up to 1,000) |
 
-**Example:**
+**Example (people search):**
 ```json
 {
   "toolType": "people_search",
   "searchQuery": "machine learning engineer"
 }
 ```
+
+**Example (tweet search):**
+```json
+{
+  "toolType": "tweet_search_extractor",
+  "searchQuery": "#AI",
+  "resultsLimit": 100
+}
+```
+
+`resultsLimit` (optional): Maximum results to extract. Stops early instead of fetching all. Pass this on both `POST /extractions/estimate` and `POST /extractions` when you only need a specific count.
 
 ## Response
 

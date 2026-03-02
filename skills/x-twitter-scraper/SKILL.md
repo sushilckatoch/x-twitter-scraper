@@ -5,12 +5,12 @@ compatibility: Requires internet access to call the Xquik REST API (https://xqui
 license: MIT
 metadata:
   author: Xquik
-  version: "1.4.0"
+  version: "1.5.0"
 ---
 
 # Xquik API Integration
 
-Xquik is an X (Twitter) real-time data platform providing a REST API, HMAC webhooks, and an MCP server for AI agents. It covers account monitoring, bulk data extraction (19 tools), giveaway draws, tweet/user lookups, follow checks, and trending topics.
+Xquik is an X (Twitter) real-time data platform providing a REST API, HMAC webhooks, and an MCP server for AI agents. It covers account monitoring, bulk data extraction (20 tools), giveaway draws, tweet/user lookups, media downloads, follow checks, and trending topics.
 
 ## Quick Reference
 
@@ -52,7 +52,8 @@ For Python examples, see [references/python-examples.md](references/python-examp
 | **Receive events in real time** | `POST /webhooks` | HMAC-signed delivery to your HTTPS endpoint |
 | **Update webhook** | `PATCH /webhooks/{id}` | Change URL, event types, or pause/resume |
 | **Run a giveaway draw** | `POST /draws` | Pick random winners from tweet replies |
-| **Extract bulk data** | `POST /extractions` | 19 tool types, always estimate cost first |
+| **Download tweet media** | `POST /x/media/download` | Images, videos, GIFs. Permanent hosted URLs. First download metered, cached free |
+| **Extract bulk data** | `POST /extractions` | 20 tool types, always estimate cost first |
 | **Check account/usage** | `GET /account` | Plan status, monitors, usage percent |
 | **Link your X identity** | `PUT /account/x-identity` | Required for own-account detection in style analysis |
 | **Analyze tweet style** | `POST /styles` | Cache recent tweets for style reference |
@@ -136,7 +137,7 @@ async function fetchAllPages(path, dataKey) {
 
 Cursors are opaque strings. Never decode or construct them manually.
 
-## Extraction Tools (19 Types)
+## Extraction Tools (20 Types)
 
 Extractions run bulk data collection jobs. The complete workflow: estimate cost, create job, retrieve results, optionally export.
 
@@ -163,16 +164,18 @@ Extractions run bulk data collection jobs. The complete workflow: estimate cost,
 | `list_follower_explorer` | `targetListId` | Followers of a list |
 | `space_explorer` | `targetSpaceId` | Participants of a Space |
 | `people_search` | `searchQuery` | Search for users by keyword |
+| `tweet_search_extractor` | `searchQuery` | Search and extract tweets by keyword or hashtag (bulk, up to 1,000) |
 
 ### Complete Extraction Workflow
 
 ```javascript
-// Step 1: Estimate cost before running
+// Step 1: Estimate cost before running (pass resultsLimit if you only need a sample)
 const estimate = await xquikFetch("/extractions/estimate", {
   method: "POST",
   body: JSON.stringify({
     toolType: "follower_explorer",
     targetUsername: "elonmusk",
+    resultsLimit: 1000, // optional: limit to 1,000 results instead of all
   }),
 });
 // Response: { allowed: true, estimatedResults: 195000000, usagePercent: 12, projectedPercent: 98 }
@@ -182,12 +185,13 @@ if (!estimate.allowed) {
   return;
 }
 
-// Step 2: Create extraction job
+// Step 2: Create extraction job (pass same resultsLimit to match estimate)
 const job = await xquikFetch("/extractions", {
   method: "POST",
   body: JSON.stringify({
     toolType: "follower_explorer",
     targetUsername: "elonmusk",
+    resultsLimit: 1000,
   }),
 });
 // Response: { id: "77777", toolType: "follower_explorer", status: "completed", totalResults: 195000 }
@@ -428,7 +432,7 @@ Event types: `tweet.new`, `tweet.quote`, `tweet.reply`, `tweet.retweet`, `follow
 
 ## MCP Server (AI Agents)
 
-The MCP server at `https://xquik.com/mcp` exposes 37 tools using StreamableHTTP transport. API key auth (`x-api-key` header) for CLI/IDE clients; OAuth 2.1 for web clients (Claude.ai, ChatGPT Developer Mode). Supported platforms: Claude.ai, Claude Desktop, Claude Code, ChatGPT (Custom GPT, Agents SDK, Developer Mode), Codex CLI, Cursor, VS Code, Windsurf, OpenCode.
+The MCP server at `https://xquik.com/mcp` exposes 38 tools using StreamableHTTP transport. API key auth (`x-api-key` header) for CLI/IDE clients; OAuth 2.1 for web clients (Claude.ai, ChatGPT Developer Mode). Supported platforms: Claude.ai, Claude Desktop, Claude Code, ChatGPT (Custom GPT, Agents SDK, Developer Mode), Codex CLI, Cursor, VS Code, Windsurf, OpenCode.
 
 For setup configs per platform, read [references/mcp-setup.md](references/mcp-setup.md). For the complete tool reference with input/output schemas, annotations, and selection rules, read [references/mcp-tools.md](references/mcp-tools.md).
 
@@ -437,7 +441,7 @@ For setup configs per platform, read [references/mcp-setup.md](references/mcp-se
 | | MCP Server | REST API |
 |---|------------|----------|
 | **Best for** | AI agents, IDE integrations | Custom apps, scripts, backend services |
-| **Tools/Endpoints** | 37 tools | 37+ endpoints |
+| **Tools/Endpoints** | 38 tools | 38+ endpoints |
 | **User profile** | Subset (no verified, location, createdAt, statusesCount) | Full profile |
 | **Search results** | Basic (id, text, author, date) | Includes optional engagement metrics |
 | **Webhook/monitor update** | Delete + recreate | PATCH endpoints |
@@ -459,6 +463,7 @@ Common multi-step tool sequences:
 - **Compare styles:** `analyze-style` for both accounts -> `compare-styles` (side-by-side comparison)
 - **Track tweet performance:** `analyze-style` (cache tweets) -> `analyze-performance` (get live engagement metrics)
 - **Save & manage drafts:** `compose-tweet` -> `refine-tweet` -> `score-tweet` -> `save-draft` -> `list-drafts` -> `get-draft` / `delete-draft`
+- **Download & share media:** `lookup-tweet` (check for media) -> download via `POST /x/media/download` (returns permanent hosted URLs)
 - **Subscribe or manage billing:** `subscribe` (returns Stripe URL)
 
 ## Pricing & Quota
@@ -466,7 +471,7 @@ Common multi-step tool sequences:
 - **Base plan**: $20/month (1 monitor, monthly usage quota)
 - **Extra monitors**: $5/month each
 - **Free**: account info, monitor/webhook management, trends, extraction history, style cache management, drafts
-- **Metered**: tweet search, user lookup, tweet lookup, follow check, extractions, draws, style analysis, performance analysis
+- **Metered**: tweet search, user lookup, tweet lookup, follow check, media download (first download only, cached free), extractions, draws, style analysis, performance analysis
 - **Quota enforcement**: hard limit, `402 usage_limit_reached` when exhausted
 - **Check usage**: `GET /account` returns `usagePercent` (0-100)
 
@@ -482,7 +487,7 @@ Common multi-step tool sequences:
 
 For additional detail beyond this guide:
 
-- **`references/mcp-tools.md`**: All 37 MCP tools with input/output schemas, annotations, selection rules, workflow patterns, common mistakes, and unsupported operations
+- **`references/mcp-tools.md`**: All 38 MCP tools with input/output schemas, annotations, selection rules, workflow patterns, common mistakes, and unsupported operations
 - **`references/api-endpoints.md`**: All REST API endpoints with methods, paths, parameters, and response shapes
 - **`references/python-examples.md`**: Python equivalents of all JavaScript examples (retry, extraction, draw, webhook)
 - **`references/webhooks.md`**: Extended webhook examples, local testing with ngrok, delivery status monitoring

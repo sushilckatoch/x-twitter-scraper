@@ -92,7 +92,8 @@ When installed, this skill gives your AI coding assistant deep knowledge of the 
 - **Trending topics**: Get trending hashtags and topics by region (free, no quota)
 - **Community & Space data**: Extract community members, moderators, posts, and Space participants
 - **Mutual follow checker**: Check if two accounts follow each other
-- **MCP server integration**: Connect AI agents to X data via 37 MCP tools
+- **Media download**: Download images, videos, and GIFs from any tweet with permanent hosted URLs
+- **MCP server integration**: Connect AI agents to X data via 38 MCP tools
 
 ## Capabilities
 
@@ -102,11 +103,12 @@ When installed, this skill gives your AI coding assistant deep knowledge of the 
 | **Tweet Fetching** | Single tweet lookup with full metrics, keyword/hashtag search |
 | **User Lookup** | Profile data, follower/following counts, verified status |
 | **Follower Analysis** | Extract followers, following, verified followers for any account |
-| **Data Extraction** | 19 bulk extraction tools (replies, retweets, quotes, threads, articles, communities, lists, Spaces, people search, mentions, posts) |
+| **Data Extraction** | 20 bulk extraction tools (replies, retweets, quotes, threads, articles, communities, lists, Spaces, people search, tweet search, mentions, posts) |
 | **Giveaway Draws** | Random winner selection from tweet replies with 11 filter options |
 | **Account Monitoring** | Real-time tracking of tweets, replies, quotes, retweets, follower changes |
 | **Webhooks** | HMAC-SHA256 signature verification in Node.js, Python, Go |
-| **MCP Server** | 37 tools, StreamableHTTP transport, configs for 9 platforms |
+| **Media Download** | Download images, videos, GIFs with permanent hosted URLs (first download metered, cached free) |
+| **MCP Server** | 38 tools, StreamableHTTP transport, configs for 10 platforms |
 | **Engagement Analytics** | Likes, retweets, replies, quotes, views, bookmarks per tweet |
 | **Trending Topics** | Regional trends with search queries (free, no quota) |
 | **Tweet Composition** | Algorithm-optimized tweet composer with scoring checklist (free) |
@@ -126,8 +128,8 @@ Claude Code, OpenAI Codex, Cursor, GitHub Copilot, Gemini CLI, Windsurf, VS Code
 | Events | List (filtered, paginated), get single |
 | Webhooks | Create, list, update, delete, test, deliveries |
 | Draws | Create with filters, list, get with winners, export |
-| Extractions | Create (19 types), estimate, list, get results, export |
-| X Lookups | Tweet by ID, search tweets, user profile, follow check |
+| Extractions | Create (20 types), estimate, list, get results, export |
+| X Lookups | Tweet by ID, search tweets, user profile, follow check, download media |
 | Trends | Regional trending topics (free) |
 
 ## Skill Structure
@@ -140,10 +142,10 @@ x-twitter-scraper/
 │       ├── metadata.json                 # Version and references
 │       └── references/
 │           ├── api-endpoints.md          # All REST API endpoints
-│           ├── mcp-tools.md             # All 37 MCP tools with schemas
-│           ├── mcp-setup.md              # MCP configs for 8 platforms
+│           ├── mcp-tools.md             # All 38 MCP tools with schemas
+│           ├── mcp-setup.md              # MCP configs for 10 platforms
 │           ├── webhooks.md               # Webhook setup & verification
-│           ├── extractions.md            # 19 extraction tool types
+│           ├── extractions.md            # 20 extraction tool types
 │           ├── types.md                  # TypeScript type definitions
 │           └── python-examples.md        # Python code examples
 ├── server.json                           # MCP Registry metadata

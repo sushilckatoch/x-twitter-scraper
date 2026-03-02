@@ -231,6 +231,7 @@ type ExtractionToolType =
   | "repost_extractor"
   | "space_explorer"
   | "thread_extractor"
+  | "tweet_search_extractor"
   | "verified_follower_explorer";
 
 interface ExtractionJob {
@@ -288,6 +289,7 @@ interface CreateExtractionRequest {
   targetListId?: string;
   targetSpaceId?: string;
   searchQuery?: string;
+  resultsLimit?: number; // Max results to extract. Stops early instead of fetching all. Omit for all.
 }
 
 // ─── X API ───────────────────────────────────────────────
@@ -354,6 +356,25 @@ interface FollowerCheck {
   targetUsername: string;
   isFollowing: boolean;
   isFollowedBy: boolean;
+}
+
+// ─── Download Media ─────────────────────────────────────
+
+interface DownloadMediaRequest {
+  tweetId?: string;  // Numeric tweet ID
+  tweetUrl?: string; // Full tweet URL (x.com or twitter.com). At least 1 required.
+}
+
+interface DownloadMediaResponse {
+  tweetId: string;
+  media: DownloadMediaItem[];
+}
+
+interface DownloadMediaItem {
+  url: string;       // Permanent download URL hosted on media.xquik.com
+  type: string;      // "photo" | "video" | "animated_gif"
+  index: number;     // Position in the tweet's media attachments (0-indexed)
+  fileSize?: string; // File size in bytes (as string). Omitted if unavailable.
 }
 
 // ─── Trends ──────────────────────────────────────────────

@@ -160,7 +160,7 @@ Add to `opencode.json`:
 }
 ```
 
-## Available MCP Tools (26)
+## Available MCP Tools (38)
 
 For complete input/output schemas, see [mcp-tools.md](mcp-tools.md).
 
@@ -174,12 +174,13 @@ For complete input/output schemas, see [mcp-tools.md](mcp-tools.md).
 | `search-tweets` | Metered | readOnly, openWorld | Search tweets by keyword, hashtag, from:user. Returns basic info only (no metrics) |
 | `get-user-info` | Metered | readOnly, openWorld | Get profile, bio, follower/following counts. No verified, location, createdAt, statusesCount |
 | `lookup-tweet` | Metered | readOnly, openWorld | Get tweet with full metrics (likes, retweets, views, bookmarks) and author verification |
+| `download-media` | Metered | openWorld | Download tweet media (images, videos, GIFs). First download metered, cached free |
 | `check-follow` | Metered | readOnly, openWorld | Check follow relationship in both directions |
 | `list-webhooks` | Free | readOnly | List all webhook endpoints with URLs and event types |
 | `add-webhook` | Free | openWorld | Register an HTTPS endpoint for HMAC-signed event delivery |
 | `remove-webhook` | Free | destructive | Permanently delete a webhook endpoint |
 | `test-webhook` | Free | openWorld | Send a test payload to verify a webhook endpoint works |
-| `run-extraction` | Metered | openWorld | Run bulk data extraction (19 tool types). Always estimate first |
+| `run-extraction` | Metered | openWorld | Run bulk data extraction (20 tool types). Always estimate first |
 | `list-extractions` | Free | readOnly | List past extraction jobs with status and result counts |
 | `get-extraction` | Free | readOnly | Get paginated results of a completed extraction |
 | `estimate-extraction` | Free | readOnly, openWorld | Preview extraction cost and check if it fits within budget |
@@ -192,6 +193,17 @@ For complete input/output schemas, see [mcp-tools.md](mcp-tools.md).
 | `compose-tweet` | Free | readOnly | Start composing an algorithm-optimized tweet. Returns signals and follow-up questions |
 | `refine-tweet` | Free | readOnly | Get targeted composition guidance after user answers follow-ups |
 | `score-tweet` | Free | readOnly | Evaluate a draft tweet against X algorithm ranking factors (pass/fail checklist) |
+| `set-x-identity` | Free | openWorld | Link your X username for own-account detection in style analysis |
+| `analyze-style` | Metered | openWorld | Fetch and cache recent tweets for style analysis |
+| `get-style` | Free | readOnly | Get a previously cached tweet style profile |
+| `list-styles` | Free | readOnly | List all cached tweet style profiles |
+| `delete-style` | Free | destructive | Delete a cached tweet style profile |
+| `compare-styles` | Free | readOnly | Compare two cached styles side by side |
+| `analyze-performance` | Metered | readOnly, openWorld | Get live engagement metrics for cached tweets |
+| `save-draft` | Free | openWorld | Save a tweet draft for later |
+| `list-drafts` | Free | readOnly | List saved tweet drafts |
+| `get-draft` | Free | readOnly | Get a specific saved tweet draft |
+| `delete-draft` | Free | destructive | Delete a saved tweet draft |
 
 **MCP vs REST field differences:** Monitor uses `xUsername` (not `username`), Event uses `eventType`/`monitoredAccountId` (not `type`/`monitorId`), FollowerCheck uses `following`/`followedBy` (not `isFollowing`/`isFollowedBy`). Use the REST API `GET /x/users/{username}` for the complete user profile.
 
