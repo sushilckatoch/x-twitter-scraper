@@ -46,6 +46,7 @@ For Python examples, see [references/python-examples.md](references/python-examp
 | **Get a user profile** | `GET /x/users/{username}` | Name, bio, follower/following counts, profile picture, location, created date, statuses count |
 | **Check follow relationship** | `GET /x/followers/check?source=A&target=B` | Both directions |
 | **Get trending topics** | `GET /trends?woeid=1` | Free, no quota consumed |
+| **Get radar (trending news)** | `GET /radar?source=hacker_news` | Free, 6 sources: Google Trends, Hacker News, TrustMRR, Wikipedia, GitHub, Reddit |
 | **Monitor an X account** | `POST /monitors` | Track tweets, replies, quotes, retweets, follower changes |
 | **Update monitor event types** | `PATCH /monitors/{id}` | Change subscribed events or pause/resume |
 | **Poll for events** | `GET /events` | Cursor-paginated, filter by monitorId/eventType |
@@ -432,7 +433,7 @@ Event types: `tweet.new`, `tweet.quote`, `tweet.reply`, `tweet.retweet`, `follow
 
 ## MCP Server (AI Agents)
 
-The MCP server at `https://xquik.com/mcp` exposes 38 tools using StreamableHTTP transport. API key auth (`x-api-key` header) for CLI/IDE clients; OAuth 2.1 for web clients (Claude.ai, ChatGPT Developer Mode). Supported platforms: Claude.ai, Claude Desktop, Claude Code, ChatGPT (Custom GPT, Agents SDK, Developer Mode), Codex CLI, Cursor, VS Code, Windsurf, OpenCode.
+The MCP server at `https://xquik.com/mcp` exposes 18 tools using StreamableHTTP transport. API key auth (`x-api-key` header) for CLI/IDE clients; OAuth 2.1 for web clients (Claude.ai, ChatGPT Developer Mode). Supported platforms: Claude.ai, Claude Desktop, Claude Code, ChatGPT (Custom GPT, Agents SDK, Developer Mode), Codex CLI, Cursor, VS Code, Windsurf, OpenCode.
 
 For setup configs per platform, read [references/mcp-setup.md](references/mcp-setup.md). For the complete tool reference with input/output schemas, annotations, and selection rules, read [references/mcp-tools.md](references/mcp-tools.md).
 
@@ -441,7 +442,7 @@ For setup configs per platform, read [references/mcp-setup.md](references/mcp-se
 | | MCP Server | REST API |
 |---|------------|----------|
 | **Best for** | AI agents, IDE integrations | Custom apps, scripts, backend services |
-| **Tools/Endpoints** | 38 tools | 38+ endpoints |
+| **Tools/Endpoints** | 18 tools | 38+ endpoints |
 | **User profile** | Subset (no verified, location, createdAt, statusesCount) | Full profile |
 | **Search results** | Basic (id, text, author, date) | Includes optional engagement metrics |
 | **Webhook/monitor update** | Delete + recreate | PATCH endpoints |
@@ -453,24 +454,25 @@ Use the REST API `GET /x/users/{username}` for the complete user profile with `v
 
 Common multi-step tool sequences:
 
-- **Set up real-time alerts:** `add-monitor` -> `add-webhook` -> `test-webhook`
-- **Run a giveaway:** `get-account` (check budget) -> `run-draw`
-- **Bulk extraction:** `get-account` (check subscription) -> `estimate-extraction` -> `run-extraction` -> `get-extraction` (results)
-- **Full tweet analysis:** `lookup-tweet` (metrics) -> `run-extraction` with `thread_extractor` (full thread)
+- **Set up real-time alerts:** `monitors` (action=add) -> `webhooks` (action=add) -> `webhooks` (action=test)
+- **Run a giveaway:** `get-account` (check budget) -> `draws` (action=run)
+- **Bulk extraction:** `get-account` (check subscription) -> `extractions` (action=estimate) -> `extractions` (action=run) -> `extractions` (action=get, results)
+- **Full tweet analysis:** `lookup-tweet` (metrics) -> `extractions` (action=run) with `thread_extractor` (full thread)
 - **Find and analyze user:** `get-user-info` (profile) -> `search-tweets from:username` (recent tweets) -> `lookup-tweet` (metrics on specific tweet)
-- **Compose algorithm-optimized tweet:** `compose-tweet` -> AI asks follow-ups -> `refine-tweet` -> AI drafts tweet -> `score-tweet` -> iterate
-- **Analyze tweet style:** `analyze-style` (fetch & cache tweets) -> `get-style` (reference cached tweets) -> `compose-tweet` with `styleUsername` (compose in that style)
-- **Compare styles:** `analyze-style` for both accounts -> `compare-styles` (side-by-side comparison)
-- **Track tweet performance:** `analyze-style` (cache tweets) -> `analyze-performance` (get live engagement metrics)
-- **Save & manage drafts:** `compose-tweet` -> `refine-tweet` -> `score-tweet` -> `save-draft` -> `list-drafts` -> `get-draft` / `delete-draft`
-- **Download & share media:** `lookup-tweet` (check for media) -> download via `POST /x/media/download` (returns permanent hosted URLs)
+- **Compose algorithm-optimized tweet:** `compose-tweet` (step=compose) -> AI asks follow-ups -> `compose-tweet` (step=refine) -> AI drafts tweet -> `compose-tweet` (step=score) -> iterate
+- **Analyze tweet style:** `styles` (action=analyze, fetch & cache tweets) -> `styles` (action=get, reference) -> `compose-tweet` with `styleUsername`
+- **Compare styles:** `styles` (action=analyze) for both accounts -> `styles` (action=compare)
+- **Track tweet performance:** `styles` (action=analyze, cache tweets) -> `styles` (action=analyze-performance, live metrics)
+- **Save & manage drafts:** `compose-tweet` -> `drafts` (action=save) -> `drafts` (action=list) -> `drafts` (action=get/delete)
+- **Download & share media:** `download-media` (returns permanent hosted URLs)
+- **Get trending news:** `get-radar` (6 sources, free) -> `compose-tweet` with trending topic
 - **Subscribe or manage billing:** `subscribe` (returns Stripe URL)
 
 ## Pricing & Quota
 
 - **Base plan**: $20/month (1 monitor, monthly usage quota)
 - **Extra monitors**: $5/month each
-- **Free**: account info, monitor/webhook management, trends, extraction history, style cache management, drafts
+- **Free**: account info, monitor/webhook management, trends, radar, extraction history, style cache management, drafts
 - **Metered**: tweet search, user lookup, tweet lookup, follow check, media download (first download only, cached free), extractions, draws, style analysis, performance analysis
 - **Quota enforcement**: hard limit, `402 usage_limit_reached` when exhausted
 - **Check usage**: `GET /account` returns `usagePercent` (0-100)
@@ -487,7 +489,7 @@ Common multi-step tool sequences:
 
 For additional detail beyond this guide:
 
-- **`references/mcp-tools.md`**: All 38 MCP tools with input/output schemas, annotations, selection rules, workflow patterns, common mistakes, and unsupported operations
+- **`references/mcp-tools.md`**: All 18 MCP tools with input/output schemas, annotations, selection rules, workflow patterns, common mistakes, and unsupported operations
 - **`references/api-endpoints.md`**: All REST API endpoints with methods, paths, parameters, and response shapes
 - **`references/python-examples.md`**: Python equivalents of all JavaScript examples (retry, extraction, draw, webhook)
 - **`references/webhooks.md`**: Extended webhook examples, local testing with ngrok, delivery status monitoring

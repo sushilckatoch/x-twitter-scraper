@@ -1,6 +1,6 @@
 # Xquik MCP Tools Reference
 
-Complete reference for all 38 MCP tools exposed by the Xquik server at `https://xquik.com/mcp`.
+Complete reference for all 18 MCP tools exposed by the Xquik server at `https://xquik.com/mcp`.
 
 ## Tool Selection Rules
 
@@ -11,32 +11,33 @@ Pick the simplest tool that answers the question:
 | Single tweet by ID or URL | `lookup-tweet` | Full metrics: likes, retweets, replies, quotes, views, bookmarks, author verification |
 | Search tweets by keyword/hashtag/from:user | `search-tweets` | Basic tweet info: id, text, author, date (no engagement metrics) |
 | User profile, bio, follower/following counts | `get-user-info` | Name, username, bio, follower count, following count, profile picture (no verification, tweet count, or join date) |
-| Download images/videos/GIFs from a tweet | `download-media` | Permanent hosted URLs on media.xquik.com. First download metered, cached free |
+| Download images/videos/GIFs from tweets | `download-media` | Permanent hosted URLs on media.xquik.com. First download metered, cached free |
 | Check follow relationship | `check-follow` | Both directions: following and followedBy |
-| Trending topics by region | `get-trends` | Names, ranks, search queries. Free, no usage consumed |
-| Activity from monitored accounts | `get-events` | Only YOUR monitors, not all of X |
+| Trending topics by region (X) | `get-trends` | Names, ranks, search queries. Free, no usage consumed |
+| Trending topics from 6 sources | `get-radar` | Google Trends, HN, TrustMRR, Wikipedia, GitHub, Reddit. Free |
+| Activity from monitored accounts | `events` | Only YOUR monitors, not all of X |
 | Budget, plan, usage percent | `get-account` | Plan, monitor quota, current period usage percent |
-| Start tracking an account | `add-monitor` | Webhooks are optional, add separately with `add-webhook` |
-| Stop tracking | `remove-monitor` | Not `remove-webhook` |
-| Run a giveaway/raffle | `run-draw` | Handles reply fetching, filtering, deduplication, and random selection automatically |
-| Past giveaway results | `list-draws` + `get-draw` | Draw details with winners |
+| Start/stop tracking an account | `monitors` action=add/remove | Webhooks are optional, add separately with `webhooks` action=add |
+| Set up webhook push notifications | `webhooks` action=add | HMAC-signed HTTP POST delivery |
+| Run a giveaway/raffle | `draws` action=run | Handles reply fetching, filtering, deduplication, and random selection automatically |
+| Past giveaway results | `draws` action=list/get | Draw details with winners |
 | Subscribe, billing, manage plan | `subscribe` | Returns Stripe Checkout or Customer Portal URL. Free |
-| Write/compose/draft a tweet | `compose-tweet` FIRST | Returns algorithm signals + follow-up questions. Then `refine-tweet`, then `score-tweet`. Free |
+| Write/compose/draft a tweet | `compose-tweet` step=compose FIRST | Returns algorithm signals + follow-up questions. Then step=refine, then step=score. Free |
 | Link your X username | `set-x-identity` | Required for own-account detection in style analysis |
-| Analyze how someone tweets | `analyze-style` | Fetches & caches recent tweets. Metered |
-| Get cached style for reference | `get-style` | Check before calling analyze-style |
-| Compare two styles | `compare-styles` | Both must be cached with analyze-style first |
-| Tweet engagement metrics | `analyze-performance` | Live metrics for cached tweets. Metered |
-| Save a tweet draft | `save-draft` | Store for later |
-| List/get/delete drafts | `list-drafts`, `get-draft`, `delete-draft` | Manage saved drafts |
+| Analyze how someone tweets | `styles` action=analyze | Fetches & caches recent tweets. Metered |
+| Get cached style for reference | `styles` action=get | Check before calling action=analyze |
+| Compare two styles | `styles` action=compare | Both must be cached with action=analyze first |
+| Tweet engagement metrics | `styles` action=analyze-performance | Live metrics for cached tweets. Metered |
+| Save a tweet draft | `drafts` action=save | Store for later |
+| List/get/delete drafts | `drafts` action=list/get/delete | Manage saved drafts |
 
-Use `run-extraction` ONLY for bulk data that simpler tools cannot provide:
+Use `extractions` action=run ONLY for bulk data that simpler tools cannot provide:
 
 - All followers/following of an account (not just the count; use `get-user-info` for counts)
 - All replies/retweets/quotes of a tweet (comprehensive list; use `lookup-tweet` for just the counts)
 - Full tweet thread, article extraction, community/list/space members
 - People search, mention history, all posts from a user
-- Always call `estimate-extraction` first to check cost. Requires active subscription.
+- Always call `extractions` action=estimate first to check cost. Requires active subscription.
 
 ## Workflow Patterns
 
@@ -44,101 +45,83 @@ Multi-step tool sequences for common tasks:
 
 | Workflow | Steps |
 |----------|-------|
-| **Set up real-time alerts** | `add-monitor` -> `add-webhook` -> `test-webhook` |
-| **Run a giveaway** | `get-account` (check budget) -> `run-draw` |
-| **Bulk extraction** | `get-account` (check subscription) -> `estimate-extraction` -> `run-extraction` -> `get-extraction` (results) |
-| **Full tweet analysis** | `lookup-tweet` (metrics) -> `run-extraction` with `thread_extractor` (full thread) |
+| **Set up real-time alerts** | `monitors` action=add -> `webhooks` action=add -> `webhooks` action=test |
+| **Run a giveaway** | `get-account` (check budget) -> `draws` action=run |
+| **Bulk extraction** | `get-account` (check subscription) -> `extractions` action=estimate -> `extractions` action=run -> `extractions` action=get (results) |
+| **Full tweet analysis** | `lookup-tweet` (metrics) -> `extractions` action=run with `thread_extractor` (full thread) |
 | **Find and analyze user** | `get-user-info` (profile) -> `search-tweets` from:username (recent tweets) -> `lookup-tweet` (metrics on specific tweet) |
-| **Compose algorithm-optimized tweet** | `compose-tweet` -> AI asks follow-ups -> `refine-tweet` -> AI drafts tweet -> `score-tweet` -> iterate |
-| **Analyze tweet style** | `analyze-style` (fetch & cache tweets) -> `get-style` (reference) -> `compose-tweet` with `styleUsername` |
-| **Compare styles** | `analyze-style` for both accounts -> `compare-styles` |
-| **Track performance** | `analyze-style` (cache tweets) -> `analyze-performance` (live metrics) |
+| **Compose algorithm-optimized tweet** | `compose-tweet` step=compose -> AI asks follow-ups -> `compose-tweet` step=refine -> AI drafts tweet -> `compose-tweet` step=score -> iterate |
+| **Compose from trending topics** | `get-radar` (find topic) -> `compose-tweet` step=compose with item title as topic -> step=refine with item URL as additionalContext |
+| **Analyze tweet style** | `styles` action=analyze (fetch & cache tweets) -> `styles` action=get (reference) -> `compose-tweet` step=compose with `styleUsername` |
+| **Compare styles** | `styles` action=analyze for both accounts -> `styles` action=compare |
+| **Track performance** | `styles` action=analyze (cache tweets) -> `styles` action=analyze-performance (live metrics) |
 | **Download & share media** | `download-media` (returns permanent hosted URLs, share directly) |
-| **Save & manage drafts** | `compose-tweet` -> `refine-tweet` -> `score-tweet` -> `save-draft` -> `list-drafts` |
+| **Save & manage drafts** | `compose-tweet` step=compose -> step=refine -> step=score -> `drafts` action=save -> `drafts` action=list |
 | **Subscribe or manage billing** | `subscribe` (returns Stripe URL) |
 
 ## Cost Categories
 
 | Category | Tools |
 |----------|-------|
-| **Free** | `list-monitors`, `add-monitor`, `remove-monitor`, `get-events`, `get-event`, `list-webhooks`, `add-webhook`, `remove-webhook`, `test-webhook`, `list-extractions`, `get-extraction`, `estimate-extraction`, `list-draws`, `get-draw`, `get-account`, `subscribe`, `get-trends`, `compose-tweet`, `refine-tweet`, `score-tweet`, `get-style`, `list-styles`, `delete-style`, `compare-styles`, `set-x-identity`, `save-draft`, `list-drafts`, `get-draft`, `delete-draft` |
-| **Metered** (counts toward monthly quota) | `search-tweets`, `get-user-info`, `lookup-tweet`, `download-media` (first download only, cached free), `check-follow`, `run-extraction`, `run-draw`, `analyze-style`, `analyze-performance` |
+| **Free** | `monitors`, `events`, `webhooks`, `extractions` action=list/get/estimate, `draws` action=list/get, `get-account`, `subscribe`, `get-trends`, `get-radar`, `compose-tweet`, `set-x-identity`, `styles` action=get/list/save/delete/compare, `drafts` |
+| **Metered** (counts toward monthly quota) | `search-tweets`, `get-user-info`, `lookup-tweet`, `download-media` (first download only, cached free), `check-follow`, `extractions` action=run, `draws` action=run, `styles` action=analyze/analyze-performance |
 
 ---
 
-## Monitoring Tools
+## Monitoring Tool
 
-### list-monitors
+### monitors
 
-List all X accounts the user is currently monitoring.
+Manage monitored X accounts. Use `action` to list, add, or remove monitors.
 
-**Input:** None
+**Input:**
 
-**Output:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `action` | string | Yes | `list` = show all monitors, `add` = start monitoring, `remove` = stop monitoring |
+| `username` | string | action=add | X username without @ prefix (e.g. "elonmusk") |
+| `eventTypes` | string[] | action=add | Event types: `tweet.new`, `tweet.reply`, `tweet.retweet`, `tweet.quote`, `follower.gained`, `follower.lost` |
+| `monitorId` | string | action=remove | Monitor ID (use `monitors` action=list to find IDs) |
+
+**Output (action=list):**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `monitors[].id` | string | Monitor ID (use with remove-monitor, get-events monitorId filter) |
+| `monitors[].id` | string | Monitor ID (use with action=remove, events monitorId filter) |
 | `monitors[].xUsername` | string | Monitored X username |
 | `monitors[].eventTypes` | string[] | Subscribed event types |
 | `monitors[].isActive` | boolean | Whether the monitor is currently active |
 | `monitors[].createdAt` | string | ISO 8601 timestamp |
 
-**Annotations:** readOnly, idempotent | **Cost:** Free
+**Output (action=add):** Monitor object with `id`, `xUsername`, `eventTypes`, `isActive`, `createdAt`.
+
+**Output (action=remove):** Text confirmation.
+
+**Annotations:** openWorld | **Cost:** Free (add requires subscription)
 
 ---
 
-### add-monitor
+## Events Tool
 
-Start monitoring an X account for real-time activity. To also receive HTTP push notifications, set up a webhook with `add-webhook` after creating the monitor.
+### events
+
+Retrieve activity from monitored X accounts. Provide `id` for single event details, omit for paginated list. Only returns events from accounts YOU monitor via `monitors` action=add. Does NOT search all of X. Use `search-tweets` for that.
 
 **Input:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `username` | string | Yes | X username without @ prefix (e.g. "elonmusk") |
-| `eventTypes` | string[] | Yes | Event types: `tweet.new`, `tweet.reply`, `tweet.retweet`, `tweet.quote`, `follower.gained`, `follower.lost` |
-
-**Output:** Monitor object with `id`, `xUsername`, `eventTypes`, `isActive`, `createdAt`.
-
-**Annotations:** openWorld | **Cost:** Free
-
----
-
-### remove-monitor
-
-Stop monitoring an X account and delete the monitor. Permanent. To only stop push notifications while keeping the monitor active, use `remove-webhook` instead.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `monitorId` | string | Yes | Monitor ID (use `list-monitors` to find IDs) |
-
-**Output:** Text confirmation.
-
-**Annotations:** destructive, idempotent | **Cost:** Free
-
----
-
-### get-events
-
-Retrieve recent activity from monitored X accounts. Only returns events from accounts YOU monitor via `add-monitor`. Does NOT search all of X. Use `search-tweets` for that.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
+| `id` | string | No | Event ID for single event details |
 | `limit` | number | No | Events to return (1-50, default 50) |
 | `afterCursor` | string | No | Pagination cursor from previous response |
 | `monitorId` | string | No | Filter to a specific monitor |
 | `eventType` | string | No | Filter: `tweet.new`, `tweet.reply`, `tweet.retweet`, `tweet.quote`, `follower.gained`, `follower.lost` |
 
-**Output:**
+**Output (list):**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `events[].id` | string | Event ID (use with get-event for full details) |
+| `events[].id` | string | Event ID (pass as `id` for full details) |
 | `events[].xUsername` | string | Username of the monitored account |
 | `events[].eventType` | string | Event type (tweet.new, tweet.reply, etc.) |
 | `events[].eventData` | object | Full event payload (tweet text, author, metrics) |
@@ -148,21 +131,7 @@ Retrieve recent activity from monitored X accounts. Only returns events from acc
 | `hasMore` | boolean | Whether more results are available |
 | `nextCursor` | string | Pass as afterCursor to fetch the next page |
 
-**Annotations:** readOnly, idempotent | **Cost:** Free
-
----
-
-### get-event
-
-Get full details for a single activity event by its ID.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `eventId` | string | Yes | Event ID (from `get-events` results) |
-
-**Output:** Single event object with `id`, `xUsername`, `eventType`, `eventData`, `monitoredAccountId`, `createdAt`, `occurredAt`.
+**Output (single event by id):** Single event object with `id`, `xUsername`, `eventType`, `eventData`, `monitoredAccountId`, `createdAt`, `occurredAt`.
 
 **Annotations:** readOnly, idempotent | **Cost:** Free
 
@@ -231,7 +200,7 @@ Get full details of a specific tweet by its ID or URL. Returns engagement metric
 
 ### get-user-info
 
-Look up an X user profile by username. Does NOT return verification status or tweet count. To check verification, use `search-tweets from:username` + `lookup-tweet` (author.verified). To search for users by name, use `run-extraction` with `people_search`.
+Look up an X user profile by username. Does NOT return verification status or tweet count. To check verification, use `search-tweets from:username` + `lookup-tweet` (author.verified). To search for users by name, use `extractions` action=run with `people_search`.
 
 **Input:**
 
@@ -258,19 +227,19 @@ Look up an X user profile by username. Does NOT return verification status or tw
 
 ### download-media
 
-Download images, videos, and GIFs from a tweet. Returns permanent download URLs hosted on media.xquik.com.
+Download images, videos, and GIFs from tweets. Accepts one or more tweet IDs/URLs (up to 50). Returns permanent download URLs hosted on media.xquik.com.
 
 **Input:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `tweetId` | string | Yes | Tweet ID or full tweet URL (x.com or twitter.com) |
+| `tweetIds` | string[] | Yes | Array of tweet IDs or full tweet URLs (1-50 items). Single item = one tweet, multiple = bulk download |
 
 **Output:**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `tweetId` | string | Resolved tweet ID |
+| `tweetId` | string | Resolved tweet ID (single mode) |
 | `media` | array | Array of downloaded media items |
 | `media[].url` | string | Permanent download URL hosted on media.xquik.com |
 | `media[].type` | string | Media type: `photo`, `video`, or `animated_gif` |
@@ -305,6 +274,8 @@ Check if one X account follows another. Returns both directions.
 
 ---
 
+## Trends Tools
+
 ### get-trends
 
 Get trending topics on X for a region. Subscription required, does not consume usage quota.
@@ -327,44 +298,70 @@ Get trending topics on X for a region. Subscription required, does not consume u
 | `trends[].description` | string | Trend description or context |
 | `trends[].query` | string | Search query to find tweets for this trend |
 
-**Annotations:** readOnly, idempotent, openWorld | **Cost:** Free
+**Annotations:** readOnly, idempotent, openWorld | **Cost:** Free (subscription required)
 
 ---
 
-## Webhook Tools
+### get-radar
 
-### list-webhooks
-
-List all webhook endpoints configured by the user.
-
-**Input:** None
-
-**Output:**
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `webhooks[].id` | string | Webhook ID (use with remove-webhook, test-webhook) |
-| `webhooks[].url` | string | HTTPS endpoint URL |
-| `webhooks[].eventTypes` | string[] | Event types delivered to this webhook |
-| `webhooks[].isActive` | boolean | Whether the webhook is currently active |
-| `webhooks[].createdAt` | string | ISO 8601 timestamp |
-
-**Annotations:** readOnly, idempotent | **Cost:** Free
-
----
-
-### add-webhook
-
-Register a new webhook endpoint to receive real-time event notifications via HTTP POST. Events are delivered as HMAC-signed JSON payloads. Returns the webhook details including an HMAC signing secret. Store this secret securely to verify payload signatures.
+Get trending topics and news from 6 sources beyond X. Use a specific item title as `topic` for `compose-tweet`. For TrustMRR items, visit the URL for founder/MRR/growth details.
 
 **Input:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `url` | string (URL) | Yes | HTTPS URL that will receive webhook POST requests |
-| `eventTypes` | string[] | Yes | Event types: `tweet.new`, `tweet.reply`, `tweet.retweet`, `tweet.quote`, `follower.gained`, `follower.lost` |
+| `source` | string | No | Filter by source: `google_trends`, `hacker_news`, `trustmrr`, `wikipedia`, `github`, `reddit` |
+| `category` | string | No | Filter by category: `general`, `tech`, `dev`, `science`, `culture`, `politics`, `business`, `entertainment` |
+| `count` | number | No | Number of items to return (1-50, default 20) |
+| `hours` | number | No | Look-back window in hours (1-72, default 6) |
+| `region` | string | No | Region code: `US`, `GB`, `TR`, `ES`, `DE`, `FR`, `JP`, `IN`, `BR`, `CA`, `MX`, `global` (default) |
 
 **Output:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `total` | number | Total number of items returned |
+| `items[].title` | string | Item title (use as `topic` for `compose-tweet`) |
+| `items[].description` | string | Optional. Item description or summary |
+| `items[].url` | string | Optional. Source URL for more details |
+| `items[].imageUrl` | string | Optional. Associated image URL |
+| `items[].source` | string | Source name (google_trends, hacker_news, etc.) |
+| `items[].category` | string | Item category |
+| `items[].region` | string | Region code |
+| `items[].score` | number | Relevance/trending score |
+| `items[].publishedAt` | string | ISO 8601 timestamp |
+| `tip` | string | Workflow hint for composing tweets from radar items |
+
+**Annotations:** readOnly, idempotent, openWorld | **Cost:** Free
+
+---
+
+## Webhook Tool
+
+### webhooks
+
+Manage webhook endpoints for real-time event push notifications. Use `action` to list, add, remove, or test webhooks.
+
+**Input:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `action` | string | Yes | `list` = show webhooks, `add` = register endpoint, `remove` = delete webhook, `test` = send test payload |
+| `url` | string (URL) | action=add | HTTPS URL that will receive webhook POST requests |
+| `eventTypes` | string[] | action=add | Event types: `tweet.new`, `tweet.reply`, `tweet.retweet`, `tweet.quote`, `follower.gained`, `follower.lost` |
+| `webhookId` | string | action=remove/test | Webhook ID (use `webhooks` action=list to find IDs) |
+
+**Output (action=list):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `webhooks[].id` | string | Webhook ID (use with action=remove, action=test) |
+| `webhooks[].url` | string | HTTPS endpoint URL |
+| `webhooks[].eventTypes` | string[] | Event types delivered to this webhook |
+| `webhooks[].isActive` | boolean | Whether the webhook is currently active |
+| `webhooks[].createdAt` | string | ISO 8601 timestamp |
+
+**Output (action=add):**
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -375,37 +372,7 @@ Register a new webhook endpoint to receive real-time event notifications via HTT
 | `createdAt` | string | ISO 8601 timestamp |
 | `secret` | string | HMAC signing secret for verifying webhook payloads. Store securely. |
 
-**Annotations:** openWorld | **Cost:** Free
-
----
-
-### remove-webhook
-
-Delete a webhook endpoint. Permanent. To stop monitoring an account entirely, use `remove-monitor` instead.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `webhookId` | string | Yes | Webhook ID (use `list-webhooks` to find IDs) |
-
-**Output:** Text confirmation.
-
-**Annotations:** destructive, idempotent | **Cost:** Free
-
----
-
-### test-webhook
-
-Send a test payload to a webhook endpoint to verify it works.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `webhookId` | string | Yes | Webhook ID (use `list-webhooks` to find IDs) |
-
-**Output:**
+**Output (action=test):**
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -413,60 +380,37 @@ Send a test payload to a webhook endpoint to verify it works.
 | `statusCode` | number | HTTP status code from the endpoint |
 | `error` | string | Error message (present on failure) |
 
+**Output (action=remove):** Text confirmation.
+
 **Annotations:** openWorld | **Cost:** Free
 
 ---
 
-## Extraction Tools
+## Extraction Tool
 
-### estimate-extraction
+### extractions
 
-Preview the cost of an extraction before running it. Always call this before `run-extraction`. Returns `allowed: false` when the user has no active subscription.
+Bulk data extraction from X with 20 tool types. Use `action` to estimate cost, run jobs, list past jobs, or get results.
 
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `toolType` | string | Yes | One of 20 extraction tool types (see `run-extraction`) |
-| `targetUsername` | string | Conditional | Required for: follower_explorer, following_explorer, verified_follower_explorer, mention_extractor, post_extractor |
-| `targetTweetId` | string | Conditional | Required for: reply_extractor, repost_extractor, quote_extractor, thread_extractor, article_extractor |
-| `targetCommunityId` | string | Conditional | Required for: community_extractor, community_moderator_explorer, community_post_extractor, community_search |
-| `targetListId` | string | Conditional | Required for: list_member_extractor, list_post_extractor, list_follower_explorer |
-| `targetSpaceId` | string | Conditional | Required for: space_explorer |
-| `searchQuery` | string | Conditional | Required for: people_search, community_search, tweet_search_extractor |
-| `resultsLimit` | number | No | Maximum results to estimate for. Omit for all available results |
-
-**Output:**
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `allowed` | boolean | Whether the extraction is allowed within budget |
-| `estimatedResults` | number | Estimated number of results |
-| `projectedPercent` | number | Projected usage percent after extraction |
-| `usagePercent` | number | Current usage percent of monthly quota |
-| `source` | string | Data source used for estimation |
-| `error` | string | Error message if estimation failed |
-
-**Annotations:** readOnly, idempotent, openWorld | **Cost:** Free
-
----
-
-### run-extraction
-
-Run a bulk data extraction job. Subscription required. For simpler lookups, prefer: `get-user-info` (profiles/counts), `search-tweets` (finding tweets), `lookup-tweet` (single tweet stats), `check-follow` (follow checks). Always call `estimate-extraction` first.
+For simpler lookups, prefer: `get-user-info` (profiles/counts), `search-tweets` (finding tweets), `lookup-tweet` (single tweet stats), `check-follow` (follow checks).
 
 **Input:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `toolType` | string | Yes | Extraction type (see table below) |
+| `action` | string | Yes | `estimate` = preview cost (always call first), `run` = start extraction, `list` = browse jobs, `get` = retrieve results |
+| `toolType` | string | action=run/estimate, optional for list filter | Extraction type (see table below) |
+| `id` | string | action=get | Extraction job ID |
 | `targetUsername` | string | Conditional | X username without @ |
 | `targetTweetId` | string | Conditional | Tweet ID |
 | `targetCommunityId` | string | Conditional | Community ID |
 | `targetListId` | string | Conditional | List ID |
 | `targetSpaceId` | string | Conditional | Space ID |
 | `searchQuery` | string | Conditional | Search keywords (for `people_search`, `community_search`, `tweet_search_extractor`) |
-| `resultsLimit` | number | No | Maximum results to extract. Stops early instead of fetching all. Omit for all results |
+| `resultsLimit` | number | No | Maximum results to extract/estimate. Stops early instead of fetching all. Omit for all results |
+| `status` | string | No | Filter by status (list): `running`, `completed`, `failed` |
+| `limit` | number | No | Results per page (list, get) |
+| `afterCursor` | string | No | Pagination cursor (list, get) |
 
 **20 tool types by target:**
 
@@ -479,37 +423,31 @@ Run a bulk data extraction job. Subscription required. For simpler lookups, pref
 | Space ID | `space_explorer` |
 | Search query | `people_search`, `tweet_search_extractor` |
 
-**Output:**
+**Output (action=estimate):**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | string | Extraction job ID (use with get-extraction for results) |
+| `allowed` | boolean | Whether the extraction is allowed within budget |
+| `estimatedResults` | number | Estimated number of results |
+| `projectedPercent` | number | Projected usage percent after extraction |
+| `usagePercent` | number | Current usage percent of monthly quota |
+| `source` | string | Data source used for estimation |
+| `error` | string | Error message if estimation failed |
+
+**Output (action=run):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Extraction job ID (use with action=get for results) |
 | `toolType` | string | Extraction tool type used |
 | `status` | string | Job status |
 | `totalResults` | number | Number of results extracted |
 
-**Annotations:** openWorld | **Cost:** Metered
-
----
-
-### list-extractions
-
-List past extraction jobs.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `limit` | number | No | Jobs to return (1-100, default 50) |
-| `afterCursor` | string | No | Pagination cursor |
-| `status` | string | No | Filter: running, completed, failed |
-| `toolType` | string | No | Filter by extraction tool type |
-
-**Output:**
+**Output (action=list):**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `extractions[].id` | string | Extraction ID (use with get-extraction for results) |
+| `extractions[].id` | string | Extraction ID (use with action=get for results) |
 | `extractions[].toolType` | string | Extraction tool type used |
 | `extractions[].status` | string | Job status (running, completed, failed) |
 | `extractions[].createdAt` | string | ISO 8601 creation timestamp |
@@ -518,23 +456,7 @@ List past extraction jobs.
 | `hasMore` | boolean | Whether more results are available |
 | `nextCursor` | string | Pass as afterCursor to fetch the next page |
 
-**Annotations:** readOnly, idempotent | **Cost:** Free
-
----
-
-### get-extraction
-
-Get results of a specific extraction job by its ID.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | Extraction job ID (from `list-extractions` or `run-extraction`) |
-| `limit` | number | No | Results to return (1-200, default 100) |
-| `afterCursor` | string | No | Pagination cursor |
-
-**Output:**
+**Output (action=get):**
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -543,21 +465,23 @@ Get results of a specific extraction job by its ID.
 | `hasMore` | boolean | Whether more results are available |
 | `nextCursor` | string | Pass as afterCursor to fetch the next page |
 
-**Annotations:** readOnly, idempotent | **Cost:** Free
+**Annotations:** openWorld | **Cost:** estimate/list/get = Free, run = Metered
 
 ---
 
-## Giveaway Draw Tools
+## Giveaway Draw Tool
 
-### run-draw
+### draws
 
-Run a giveaway draw or raffle from a tweet. Handles reply fetching, filtering, deduplication, and cryptographically secure random selection automatically.
+Giveaway draws from tweet replies. Use `action` to run a draw, list past draws, or get draw details.
 
 **Input:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `tweetUrl` | string | Yes | Full tweet URL (e.g. "https://x.com/user/status/123") |
+| `action` | string | Yes | `run` = pick winners, `list` = browse past draws, `get` = draw details |
+| `tweetUrl` | string | action=run | Full tweet URL (e.g. "https://x.com/user/status/123") |
+| `drawId` | string | action=get | Draw ID |
 | `winnerCount` | number | No | Winners to select (default 1) |
 | `backupCount` | number | No | Backup winners to select |
 | `uniqueAuthorsOnly` | boolean | No | Count only one entry per author |
@@ -569,12 +493,14 @@ Run a giveaway draw or raffle from a tweet. Handles reply fetching, filtering, d
 | `requiredHashtags` | string[] | No | Hashtags that must appear in replies |
 | `requiredKeywords` | string[] | No | Keywords that must appear in replies |
 | `requiredMentions` | string[] | No | Usernames that must be mentioned in replies |
+| `limit` | number | No | Results per page (list) |
+| `afterCursor` | string | No | Pagination cursor (list) |
 
-**Output:**
+**Output (action=run):**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | string | Draw ID (use with get-draw for full details) |
+| `id` | string | Draw ID (use with action=get for full details) |
 | `tweetId` | string | Giveaway tweet ID |
 | `totalEntries` | number | Total reply count before filtering |
 | `validEntries` | number | Valid entries after filtering |
@@ -583,26 +509,11 @@ Run a giveaway draw or raffle from a tweet. Handles reply fetching, filtering, d
 | `winners[].tweetId` | string | Tweet ID of the winning reply |
 | `winners[].isBackup` | boolean | Whether this is a backup winner |
 
-**Annotations:** openWorld | **Cost:** Metered
-
----
-
-### list-draws
-
-List past giveaway draws.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `limit` | number | No | Draws to return (1-100, default 50) |
-| `afterCursor` | string | No | Pagination cursor |
-
-**Output:**
+**Output (action=list):**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `draws[].id` | string | Draw ID (use with get-draw for full details) |
+| `draws[].id` | string | Draw ID (use with action=get for full details) |
 | `draws[].tweetUrl` | string | Giveaway tweet URL |
 | `draws[].status` | string | Draw status |
 | `draws[].createdAt` | string | ISO 8601 timestamp |
@@ -612,21 +523,7 @@ List past giveaway draws.
 | `hasMore` | boolean | Whether more results are available |
 | `nextCursor` | string | Pass as afterCursor to fetch the next page |
 
-**Annotations:** readOnly, idempotent | **Cost:** Free
-
----
-
-### get-draw
-
-Get details of a specific giveaway draw including winners.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `drawId` | string | Yes | Draw ID (from `list-draws` or `run-draw`) |
-
-**Output:**
+**Output (action=get):**
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -649,7 +546,7 @@ Get details of a specific giveaway draw including winners.
 | `winners[].tweetId` | string | Tweet ID of the winning reply |
 | `winners[].isBackup` | boolean | Whether this is a backup winner |
 
-**Annotations:** readOnly, idempotent | **Cost:** Free
+**Annotations:** openWorld | **Cost:** list/get = Free, run = Metered
 
 ---
 
@@ -697,21 +594,35 @@ Get a subscription checkout or management link. Returns a Stripe Checkout URL (f
 
 ---
 
-## Tweet Composition Tools
+## Tweet Composition Tool
 
 ### compose-tweet
 
-Start composing an algorithm-optimized tweet. Returns X algorithm engagement signals, content rules, and follow-up questions for the AI to ask the user. Subscription required, not metered. Use this first, then `refine-tweet` after the user answers follow-ups, then `score-tweet` to evaluate the draft. Optionally pass `styleUsername` to include cached style tweets for reference.
+Compose, refine, and score tweets using X algorithm data. Use `step` to progress through the workflow.
+
+- `step=compose` (default): Returns X algorithm weights, content rules, engagement multipliers, follow-up questions, and any saved style profiles. Optionally pass `styleUsername` to include cached style tweets for reference.
+- `step=refine`: Returns goal-specific composition guidance, example tweet patterns, media strategy, hashtag advice, and CTA guidance. Call after the user answers follow-up questions from compose.
+- `step=score`: Evaluates a draft tweet against 15 algorithm ranking checks with pass/fail and an intent URL for posting.
+
+Subscription required, not metered.
 
 **Input:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `topic` | string | Yes | What the tweet is about |
+| `step` | string | No | Workflow step: `compose` (default), `refine`, `score` |
+| `topic` | string | step=compose/refine | What the tweet is about |
 | `goal` | string | No | Optimization goal: `engagement` (default), `followers`, `authority`, `conversation` |
-| `styleUsername` | string | No | X username whose cached style tweets to include for reference (must have been analyzed with `analyze-style` first) |
+| `styleUsername` | string | No | X username whose cached style tweets to include (compose). Must be analyzed with `styles` action=analyze first |
+| `tone` | string | step=refine | Desired tone (e.g. casual, professional, provocative, educational) |
+| `mediaType` | string | No | `photo`, `video`, or `none` (refine) |
+| `callToAction` | string | No | Desired CTA (refine) |
+| `additionalContext` | string | No | Additional context about target audience or constraints (refine) |
+| `draft` | string | step=score | The draft tweet text to evaluate |
+| `hasLink` | boolean | No | Whether a link will be attached (score) |
+| `hasMedia` | boolean | No | Whether media will be attached (score) |
 
-**Output:**
+**Output (step=compose):**
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -732,27 +643,7 @@ Start composing an algorithm-optimized tweet. Returns X algorithm engagement sig
 | `source` | string | Attribution to algorithm source code |
 | `styleTweets` | array | Optional. Cached tweets from the referenced style username |
 
-**Annotations:** readOnly, idempotent | **Cost:** Free
-
----
-
-### refine-tweet
-
-Get targeted composition guidance after the user answers follow-up questions from `compose-tweet`. Returns goal-specific tips, example tweet patterns, media strategy, hashtag advice, and CTA guidance. Subscription required, not metered.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `topic` | string | Yes | What the tweet is about |
-| `goal` | string | Yes | `engagement`, `followers`, `authority`, or `conversation` |
-| `tone` | string | Yes | Desired tone (e.g. casual, professional, provocative, educational) |
-| `hashtags` | string | No | Hashtags to include (comma or space separated) |
-| `mediaType` | string | No | `photo`, `video`, or `none` |
-| `callToAction` | string | No | Desired CTA (e.g. "reply with your take", "share if you agree") |
-| `additionalContext` | string | No | Additional context about target audience or constraints |
-
-**Output:**
+**Output (step=refine):**
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -760,23 +651,7 @@ Get targeted composition guidance after the user answers follow-up questions fro
 | `examplePatterns[].pattern` | string | Tweet structure template |
 | `examplePatterns[].description` | string | What this pattern achieves |
 
-**Annotations:** readOnly, idempotent | **Cost:** Free
-
----
-
-### score-tweet
-
-Evaluate a draft tweet against X algorithm ranking factors. Returns a pass/fail checklist covering links, hashtags, capitalization, engagement farming, CTA, length, media, and punctuation. Subscription required, not metered.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `draft` | string | Yes | The draft tweet text to evaluate |
-| `hasLink` | boolean | No | Whether a link will be attached (link card, not in tweet body) |
-| `hasMedia` | boolean | No | Whether media (photo/video) will be attached |
-
-**Output:**
+**Output (step=score):**
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -787,7 +662,7 @@ Evaluate a draft tweet against X algorithm ranking factors. Returns a pass/fail 
 | `checklist[].passed` | boolean | Whether the check passed |
 | `checklist[].suggestion` | string | Improvement suggestion (present only if failed) |
 
-**Annotations:** readOnly, idempotent | **Cost:** Free
+**Annotations:** readOnly, idempotent | **Cost:** Free (subscription required)
 
 ---
 
@@ -813,19 +688,24 @@ Link your X (Twitter) username to your Xquik account. Required for own-account d
 
 ---
 
-## Style Analysis Tools
+## Style Tool
 
-### analyze-style
+### styles
 
-Fetch and cache recent tweets from an X account for style analysis. Use when someone says "analyze @username's style" or "how does @username tweet?". Fetches recent tweets and caches them. Use `get-style` to check if already cached. Subscription required.
+Manage tweet style profiles. Use `action` to analyze, get, list, save, delete, compare styles, or analyze performance.
 
 **Input:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `username` | string | Yes | X username to analyze (without the @ prefix) |
+| `action` | string | Yes | `analyze` = fetch & cache tweets, `get` = cached style, `list` = all cached styles, `save` = save custom style from tweet texts, `delete` = remove cached style, `compare` = side-by-side comparison, `analyze-performance` = engagement metrics |
+| `username` | string | action=analyze/get/delete/analyze-performance | X username without @ prefix |
+| `username1` | string | action=compare | First X username to compare (without @) |
+| `username2` | string | action=compare | Second X username to compare (without @) |
+| `label` | string | action=save | Style label name |
+| `tweets` | string[] | action=save | Tweet texts defining the style (1-100 items) |
 
-**Output:**
+**Output (action=analyze):**
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -838,33 +718,9 @@ Fetch and cache recent tweets from an X account for style analysis. Use when som
 | `tweets[].authorUsername` | string | Author username |
 | `tweets[].createdAt` | string | ISO 8601 timestamp |
 
-**Annotations:** openWorld | **Cost:** Metered
+**Output (action=get):** Same shape as action=analyze output.
 
----
-
-### get-style
-
-Get a previously cached tweet style profile. Use to check if a style is already cached before calling `analyze-style`. Subscription required.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `username` | string | Yes | X username to look up (without the @ prefix) |
-
-**Output:** Same as `analyze-style` output.
-
-**Annotations:** readOnly, idempotent | **Cost:** Free (subscription required)
-
----
-
-### list-styles
-
-List all cached tweet style profiles. Subscription required.
-
-**Input:** None
-
-**Output:**
+**Output (action=list):**
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -873,63 +729,22 @@ List all cached tweet style profiles. Subscription required.
 | `styles[].isOwnAccount` | boolean | Whether this is the user's own account |
 | `styles[].fetchedAt` | string | ISO 8601 timestamp |
 
-**Annotations:** readOnly, idempotent | **Cost:** Free (subscription required)
+**Output (action=save):** Style object with label and tweet data.
 
----
-
-### delete-style
-
-Delete a cached tweet style profile. Subscription required.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `username` | string | Yes | X username whose cached style to delete (without the @ prefix) |
-
-**Output:**
+**Output (action=delete):**
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `deleted` | boolean | Whether the style was deleted |
 
-**Annotations:** destructive, idempotent | **Cost:** Free (subscription required)
-
----
-
-### compare-styles
-
-Compare two cached tweet style profiles side by side. Both accounts must have been analyzed with `analyze-style` first. Subscription required.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `username1` | string | Yes | First X username to compare (without @) |
-| `username2` | string | Yes | Second X username to compare (without @) |
-
-**Output:**
+**Output (action=compare):**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `style1` | object | Full style profile for username1 (same shape as `get-style` output) |
-| `style2` | object | Full style profile for username2 (same shape as `get-style` output) |
+| `style1` | object | Full style profile for username1 (same shape as action=get output) |
+| `style2` | object | Full style profile for username2 (same shape as action=get output) |
 
-**Annotations:** readOnly, idempotent | **Cost:** Free (subscription required)
-
----
-
-### analyze-performance
-
-Get engagement metrics for cached tweets. Requires cached style from `analyze-style`. Subscription required.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `username` | string | Yes | X username whose cached tweets to analyze (without the @ prefix) |
-
-**Output:**
+**Output (action=analyze-performance):**
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -944,51 +759,40 @@ Get engagement metrics for cached tweets. Requires cached style from `analyze-st
 | `tweets[].viewCount` | number | Number of views |
 | `tweets[].bookmarkCount` | number | Number of bookmarks |
 
-**Annotations:** readOnly, idempotent, openWorld | **Cost:** Metered
+**Annotations:** openWorld | **Cost:** get/list/save/delete/compare = Free (subscription required), analyze/analyze-performance = Metered
 
 ---
 
-## Draft Tools
+## Draft Tool
 
-### save-draft
+### drafts
 
-Save a tweet draft for later. Subscription required.
+Manage tweet drafts. Use `action` to save, list, get, or delete drafts.
 
 **Input:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `text` | string | Yes | The draft tweet text |
-| `topic` | string | No | Topic the tweet is about |
-| `goal` | string | No | Optimization goal used when composing: `engagement`, `followers`, `authority`, `conversation` |
+| `action` | string | Yes | `save` = store draft, `list` = browse drafts, `get` = single draft, `delete` = remove draft |
+| `text` | string | action=save | The draft tweet text |
+| `topic` | string | No | Topic the tweet is about (save) |
+| `goal` | string | No | Optimization goal: `engagement`, `followers`, `authority`, `conversation` (save) |
+| `draftId` | string | action=get/delete | Draft ID |
+| `limit` | number | No | Results per page (list, 1-50, default 50) |
+| `afterCursor` | string | No | Pagination cursor (list) |
 
-**Output:**
+**Output (action=save):**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | string | Draft ID (use with get-draft, delete-draft) |
+| `id` | string | Draft ID (use with action=get, action=delete) |
 | `text` | string | Draft text |
 | `topic` | string | Topic (if provided) |
 | `goal` | string | Goal (if provided) |
 | `createdAt` | string | ISO 8601 timestamp |
 | `updatedAt` | string | ISO 8601 timestamp |
 
-**Annotations:** --- | **Cost:** Free (subscription required)
-
----
-
-### list-drafts
-
-List saved tweet drafts. Subscription required.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `limit` | number | No | Drafts to return (1-50, default 50) |
-| `afterCursor` | string | No | Pagination cursor from previous response |
-
-**Output:**
+**Output (action=list):**
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -1001,43 +805,15 @@ List saved tweet drafts. Subscription required.
 | `hasMore` | boolean | Whether more results are available |
 | `nextCursor` | string | Pass as afterCursor to fetch the next page |
 
-**Annotations:** readOnly, idempotent | **Cost:** Free (subscription required)
+**Output (action=get):** Single draft object with `id`, `text`, `topic`, `goal`, `createdAt`, `updatedAt`.
 
----
-
-### get-draft
-
-Get a specific saved tweet draft by its ID. Subscription required.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `draftId` | string | Yes | Draft ID (from `list-drafts` or `save-draft`) |
-
-**Output:** Single draft object with `id`, `text`, `topic`, `goal`, `createdAt`, `updatedAt`.
-
-**Annotations:** readOnly, idempotent | **Cost:** Free (subscription required)
-
----
-
-### delete-draft
-
-Delete a saved tweet draft. Subscription required.
-
-**Input:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `draftId` | string | Yes | Draft ID to delete (from `list-drafts`) |
-
-**Output:**
+**Output (action=delete):**
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `deleted` | boolean | Whether the draft was deleted |
 
-**Annotations:** destructive, idempotent | **Cost:** Free (subscription required)
+**Annotations:** --- | **Cost:** Free (subscription required)
 
 ---
 
@@ -1051,14 +827,14 @@ Both interfaces access the same Xquik platform. Choose based on your integration
 | **Transport** | StreamableHTTP | HTTPS + JSON |
 | **Auth** | `x-api-key` header | `x-api-key` header |
 | **Best for** | AI agents, IDE integrations | Custom apps, scripts, backend services |
-| **Tools/Endpoints** | 38 tools | 38+ endpoints |
+| **Tools/Endpoints** | 18 tools | 38+ endpoints |
 | **User profile** | Subset: name, bio, follower/following counts, profile picture | Full: adds verified, location, createdAt, statusesCount |
 | **Follow check** | `following` / `followedBy` | `isFollowing` / `isFollowedBy` |
 | **Monitor username field** | `xUsername` | `username` |
 | **Event fields** | `eventType`, `eventData`, `monitoredAccountId` | `type`, `data`, `monitorId` |
 | **Search results** | id, text, authorUsername, authorName, createdAt | id, text, createdAt, optional metrics, author object |
-| **Webhook update** | Not available (delete + recreate) | `PATCH /webhooks/{id}` |
-| **Monitor update** | Not available (delete + recreate) | `PATCH /monitors/{id}` |
+| **Webhook update** | Not available (delete + recreate via `webhooks` action=remove then action=add) | `PATCH /webhooks/{id}` |
+| **Monitor update** | Not available (delete + recreate via `monitors` action=remove then action=add) | `PATCH /monitors/{id}` |
 | **Export** | Not available (use REST) | `GET /extractions/{id}/export`, `GET /draws/{id}/export` |
 
 **Key differences:**
@@ -1071,36 +847,37 @@ Both interfaces access the same Xquik platform. Choose based on your integration
 
 ## Annotation Summary
 
-All 38 tools declare MCP annotations indicating their behavior:
+All 18 tools declare MCP annotations indicating their behavior:
 
 | Annotation | Meaning | Tools |
 |------------|---------|-------|
-| `readOnlyHint: true` | Does not modify any data | list-monitors, get-events, get-event, search-tweets, get-user-info, list-webhooks, lookup-tweet, check-follow, list-extractions, get-extraction, estimate-extraction, list-draws, get-draw, get-account, get-trends, compose-tweet, refine-tweet, score-tweet, get-style, list-styles, compare-styles, analyze-performance, list-drafts, get-draft |
-| `destructiveHint: true` | Permanently deletes data | remove-monitor, remove-webhook, delete-style, delete-draft |
-| `idempotentHint: true` | Safe to retry, same result | list-monitors, remove-monitor, get-events, get-event, search-tweets, get-user-info, list-webhooks, remove-webhook, lookup-tweet, check-follow, list-extractions, get-extraction, estimate-extraction, list-draws, get-draw, get-account, subscribe, get-trends, compose-tweet, refine-tweet, score-tweet, set-x-identity, get-style, list-styles, delete-style, compare-styles, analyze-performance, list-drafts, get-draft, delete-draft |
-| `openWorldHint: true` | Makes external network requests | add-monitor, search-tweets, get-user-info, add-webhook, test-webhook, lookup-tweet, download-media, check-follow, run-extraction, estimate-extraction, run-draw, subscribe, get-trends, analyze-style, analyze-performance |
+| `readOnlyHint: true` | Does not modify any data | events, search-tweets, get-user-info, lookup-tweet, check-follow, get-account, get-trends, get-radar, compose-tweet |
+| `destructiveHint: true` | Permanently deletes data | (handled within consolidated tools via action params: monitors action=remove, webhooks action=remove, styles action=delete, drafts action=delete) |
+| `idempotentHint: true` | Safe to retry, same result | events, search-tweets, get-user-info, lookup-tweet, download-media, check-follow, get-account, subscribe, get-trends, get-radar, compose-tweet, set-x-identity |
+| `openWorldHint: true` | Makes external network requests | monitors, search-tweets, get-user-info, webhooks, lookup-tweet, download-media, check-follow, extractions, draws, subscribe, get-trends, get-radar, styles |
 
 ---
 
 ## Common Mistakes
 
-- Do NOT use `run-extraction` to get follower/following COUNT. Use `get-user-info`
-- Do NOT use `run-extraction` `post_extractor` to find latest tweets. Use `search-tweets from:username`
+- Do NOT use `extractions` action=run to get follower/following COUNT. Use `get-user-info`
+- Do NOT use `extractions` action=run with `post_extractor` to find latest tweets. Use `search-tweets from:username`
 - Do NOT use `search-tweets` when you have a tweet ID/URL. Use `lookup-tweet`
-- Do NOT use `get-events` for non-monitored accounts. Use `search-tweets`
-- Do NOT use `run-extraction` to get retweet/reply/like COUNTS. Use `lookup-tweet`
-- Do NOT use `search-tweets` to find trending topics. Use `get-trends`
-- Do NOT run extractions without estimating cost. Use `get-account` + `estimate-extraction`
+- Do NOT use `events` for non-monitored accounts. Use `search-tweets`
+- Do NOT use `extractions` action=run to get retweet/reply/like COUNTS. Use `lookup-tweet`
+- Do NOT use `search-tweets` to find trending topics. Use `get-trends` (X trends) or `get-radar` (multi-source trends)
+- Do NOT run extractions without estimating cost. Use `get-account` + `extractions` action=estimate
 - Do NOT use `get-user-info` to check verification. Use `search-tweets from:username` + `lookup-tweet` (author.verified)
-- Do NOT manually search replies and pick random winners. Use `run-draw` which handles filtering, deduplication, and cryptographically secure random selection
+- Do NOT manually search replies and pick random winners. Use `draws` action=run which handles filtering, deduplication, and cryptographically secure random selection
 - Do NOT invent tool types like "like_extractor" or "bookmark_extractor". Likes and bookmarks are NOT available
 - Do NOT use `lookup-tweet` to download media. Use `download-media` which downloads and hosts the files permanently
-- Do NOT compose tweets without calling `compose-tweet` first. It provides algorithm-backed signals that dramatically improve engagement. ALWAYS call it before drafting any tweet text
-- Do NOT call `analyze-style` without checking `get-style` first. The cached style may already exist
-- Do NOT call `analyze-performance` without first caching tweets via `analyze-style`
+- Do NOT compose tweets without calling `compose-tweet` step=compose first. It provides algorithm-backed signals that dramatically improve engagement. ALWAYS call it before drafting any tweet text
+- Do NOT call `styles` action=analyze without checking `styles` action=get first. The cached style may already exist
+- Do NOT call `styles` action=analyze-performance without first caching tweets via `styles` action=analyze
 - Do NOT forget to call `set-x-identity` before style analysis if you want own-account detection
-- Do NOT loop `search-tweets` for bulk results. It returns ~20 tweets with no pagination. Use `run-extraction` with `tweet_search_extractor` for bulk keyword search (up to 1,000)
+- Do NOT loop `search-tweets` for bulk results. It returns ~20 tweets with no pagination. Use `extractions` action=run with `tweet_search_extractor` for bulk keyword search (up to 1,000)
 - Do NOT run extractions without `resultsLimit` when the user specifies a count. "100 tweets" means `resultsLimit: 100`. Omitting it extracts ALL data and wastes credits
+- Do NOT call old tool names like `list-monitors`, `add-monitor`, `remove-monitor`, `get-events`, `get-event`, `list-webhooks`, `add-webhook`, `remove-webhook`, `test-webhook`, `run-extraction`, `estimate-extraction`, `list-extractions`, `get-extraction`, `run-draw`, `list-draws`, `get-draw`, `analyze-style`, `get-style`, `list-styles`, `delete-style`, `compare-styles`, `analyze-performance`, `refine-tweet`, `score-tweet`, `save-draft`, `list-drafts`, `get-draft`, `delete-draft`. These have been consolidated into 18 tools with `action` or `step` parameters
 
 ## Unsupported Operations
 

@@ -90,10 +90,11 @@ When installed, this skill gives your AI coding assistant deep knowledge of the 
 - **X account monitoring**: Track accounts for new tweets, replies, quotes, retweets, and follower changes in real time
 - **Webhook delivery**: Receive HMAC-signed event notifications at your HTTPS endpoint
 - **Trending topics**: Get trending hashtags and topics by region (free, no quota)
+- **Radar**: Trending topics and news from 6 sources (Google Trends, Hacker News, TrustMRR, Wikipedia, GitHub, Reddit). Free
 - **Community & Space data**: Extract community members, moderators, posts, and Space participants
 - **Mutual follow checker**: Check if two accounts follow each other
 - **Media download**: Download images, videos, and GIFs from any tweet with permanent hosted URLs
-- **MCP server integration**: Connect AI agents to X data via 38 MCP tools
+- **MCP server integration**: Connect AI agents to X data via 18 MCP tools
 
 ## Capabilities
 
@@ -108,7 +109,7 @@ When installed, this skill gives your AI coding assistant deep knowledge of the 
 | **Account Monitoring** | Real-time tracking of tweets, replies, quotes, retweets, follower changes |
 | **Webhooks** | HMAC-SHA256 signature verification in Node.js, Python, Go |
 | **Media Download** | Download images, videos, GIFs with permanent hosted URLs (first download metered, cached free) |
-| **MCP Server** | 38 tools, StreamableHTTP transport, configs for 10 platforms |
+| **MCP Server** | 18 tools, StreamableHTTP transport, configs for 10 platforms |
 | **Engagement Analytics** | Likes, retweets, replies, quotes, views, bookmarks per tweet |
 | **Trending Topics** | Regional trends with search queries (free, no quota) |
 | **Tweet Composition** | Algorithm-optimized tweet composer with scoring checklist (free) |
@@ -131,6 +132,7 @@ Claude Code, OpenAI Codex, Cursor, GitHub Copilot, Gemini CLI, Windsurf, VS Code
 | Extractions | Create (20 types), estimate, list, get results, export |
 | X Lookups | Tweet by ID, search tweets, user profile, follow check, download media |
 | Trends | Regional trending topics (free) |
+| Radar | Trending topics & news from 6 sources (free) |
 
 ## Skill Structure
 
@@ -142,7 +144,7 @@ x-twitter-scraper/
 │       ├── metadata.json                 # Version and references
 │       └── references/
 │           ├── api-endpoints.md          # All REST API endpoints
-│           ├── mcp-tools.md             # All 38 MCP tools with schemas
+│           ├── mcp-tools.md              # All 18 MCP tools with schemas
 │           ├── mcp-setup.md              # MCP configs for 10 platforms
 │           ├── webhooks.md               # Webhook setup & verification
 │           ├── extractions.md            # 20 extraction tool types
